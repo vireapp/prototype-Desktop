@@ -1,0 +1,15 @@
+  ΓÇó electron-builder  version=26.8.1 os=10.0.26200
+  ΓÇó loaded configuration  file=D:\CODES\prototype Desktop\electron-builder.yml
+  ΓÇó skipped dependencies rebuild  reason=npmRebuild is set to false
+  ΓÇó packaging       platform=win32 arch=x64 electron=40.6.1 appOutDir=dist\win-unpacked
+  ΓÇó searching for node modules  pm=npm searchDir=D:\CODES\prototype Desktop
+  ΓÇó searching for node modules  pm=traversal searchDir=D:\CODES\prototype Desktop
+  ΓÇó using manual traversal of node_modules to build dependency tree
+  ΓÇó no node modules returned while searching directories  searchDirectories=[""]
+  ΓÇó updating asar integrity executable resource  executablePath=dist\win-unpacked\VIRE.exe
+  ΓÇó signing with signtool.exe  path=dist\win-unpacked\VIRE.exe
+  ΓÇó building        target=nsis file=dist\vire-app-1.0.0-setup.exe archs=x64 oneClick=false perMachine=false
+  ΓÇó signing with signtool.exe  path=dist\win-unpacked\resources\elevate.exe
+  ΓÇó signing with signtool.exe  path=dist\vire-app-1.0.0-setup.__uninstaller.exe
+  ΓÇó signing with signtool.exe  path=dist\vire-app-1.0.0-setup.exe
+  ΓÇó building block map  blockMapFile=dist\vire-app-1.0.0-setup.exe.blockmap

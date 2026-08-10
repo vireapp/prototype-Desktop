@@ -1,0 +1,226 @@
+{
+  "en": {
+    "categories": {
+      "account": "Account",
+      "experience": "Experience",
+      "advanced": "Advanced"
+    },
+    "tabs": {
+      "profile": "Profile",
+      "account": "Account",
+      "security": "Security",
+      "privacy": "Privacy",
+      "data": "Data",
+      "language_region": "Language & Region",
+      "appearance": "Appearance",
+      "accessibility": "Accessibility",
+      "preferences": "Preferences",
+      "room_defaults": "Room Defaults",
+      "notifications": "Notifications",
+      "ai": "AI",
+      "immersion": "Immersion",
+      "audio": "Audio",
+      "system": "System",
+      "developer": "Developer"
+    },
+    "ui": {
+      "save_settings": "Save Settings",
+      "cancel": "Cancel",
+      "loading": "Loading...",
+      "dashboard": "Dashboard",
+      "settings": "Settings"
+    }
+  },
+  "es": {
+    "categories": {
+      "account": "Cuenta",
+      "experience": "Experiencia",
+      "advanced": "Avanzado"
+    },
+    "tabs": {
+      "profile": "Perfil",
+      "account": "Cuenta",
+      "security": "Seguridad",
+      "privacy": "Privacidad",
+      "data": "Datos",
+      "language_region": "Idioma y Región",
+      "appearance": "Apariencia",
+      "accessibility": "Accesibilidad",
+      "preferences": "Preferencias",
+      "room_defaults": "Valores predeterminados de la sala",
+      "notifications": "Notificaciones",
+      "ai": "IA",
+      "immersion": "Inmersión",
+      "audio": "Audio",
+      "system": "Sistema",
+      "developer": "Desarrollador"
+    },
+    "ui": {
+      "save_settings": "Guardar configuración",
+      "cancel": "Cancelar",
+      "loading": "Cargando...",
+      "dashboard": "Panel",
+      "settings": "Configuración"
+    }
+  },
+  "fr": {
+    "categories": {
+      "account": "Compte",
+      "experience": "Expérience",
+      "advanced": "Avancé"
+    },
+    "tabs": {
+      "profile": "Profil",
+      "account": "Compte",
+      "security": "Sécurité",
+      "privacy": "Confidentialité",
+      "data": "Données",
+      "language_region": "Langue et région",
+      "appearance": "Apparence",
+      "accessibility": "Accessibilité",
+      "preferences": "Préférences",
+      "room_defaults": "Paramètres de salle par défaut",
+      "notifications": "Notifications",
+      "ai": "IA",
+      "immersion": "Immersion",
+      "audio": "Audio",
+      "system": "Système",
+      "developer": "Développeur"
+    },
+    "ui": {
+      "save_settings": "Enregistrer les paramètres",
+      "cancel": "Annuler",
+      "loading": "Chargement...",
+      "dashboard": "Tableau de bord",
+      "settings": "Paramètres"
+    }
+  },
+  "de": {
+    "categories": {
+      "account": "Konto",
+      "experience": "Erlebnis",
+      "advanced": "Erweitert"
+    },
+    "tabs": {
+      "profile": "Profil",
+      "account": "Konto",
+      "security": "Sicherheit",
+      "privacy": "Datenschutz",
+      "data": "Daten",
+      "language_region": "Sprache & Region",
+      "appearance": "Erscheinungsbild",
+      "accessibility": "Barrierefreiheit",
+      "preferences": "Einstellungen",
+      "room_defaults": "Standardraumeinstellungen",
+      "notifications": "Benachrichtigungen",
+      "ai": "KI",
+      "immersion": "Immersion",
+      "audio": "Audio",
+      "system": "System",
+      "developer": "Entwickler"
+    },
+    "ui": {
+      "save_settings": "Einstellungen speichern",
+      "cancel": "Abbrechen",
+      "loading": "Wird geladen...",
+      "dashboard": "Dashboard",
+      "settings": "Einstellungen"
+    }
+  },
+  "ja": {
+    "categories": {
+      "account": "アカウント",
+      "experience": "エクスペリエンス",
+      "advanced": "詳細"
+    },
+    "tabs": {
+      "profile": "プロフィール",
+      "account": "アカウント",
+      "security": "セキュリティ",
+      "privacy": "プライバシー",
+      "data": "データ",
+      "language_region": "言語と地域",
+      "appearance": "外観",
+      "accessibility": "アクセシビリティ",
+      "preferences": "設定",
+      "room_defaults": "ルームのデフォルト",
+      "notifications": "通知",
+      "ai": "AI",
+      "immersion": "没入感",
+      "audio": "オーディオ",
+      "system": "システム",
+      "developer": "開発者"
+    },
+    "ui": {
+      "save_settings": "設定を保存",
+      "cancel": "キャンセル",
+      "loading": "読み込み中...",
+      "dashboard": "ダッシュボード",
+      "settings": "設定"
+    }
+  },
+  "ko": {
+    "categories": {
+      "account": "계정",
+      "experience": "환경",
+      "advanced": "고급"
+    },
+    "tabs": {
+      "profile": "프로필",
+      "account": "계정",
+      "security": "보안",
+      "privacy": "개인정보 보호",
+      "data": "데이터",
+      "language_region": "언어 및 지역",
+      "appearance": "모양",
+      "accessibility": "접근성",
+      "preferences": "환경설정",
+      "room_defaults": "방 기본값",
+      "notifications": "알림",
+      "ai": "AI",
+      "immersion": "몰입",
+      "audio": "오디오",
+      "system": "시스템",
+      "developer": "개발자"
+    },
+    "ui": {
+      "save_settings": "설정 저장",
+      "cancel": "취소",
+      "loading": "로딩 중...",
+      "dashboard": "대시보드",
+      "settings": "설정"
+    }
+  },
+  "hi": {
+    "categories": {
+      "account": "खाता",
+      "experience": "अनुभव",
+      "advanced": "उन्नत"
+    },
+    "tabs": {
+      "profile": "प्रोफ़ाइल",
+      "account": "खाता",
+      "security": "सुरक्षा",
+      "privacy": "गोपनीयता",
+      "data": "डेटा",
+      "language_region": "भाषा और क्षेत्र",
+      "appearance": "रूप-रंग",
+      "accessibility": "एक्सेसिबिलिटी",
+      "preferences": "प्राथमिकताएं",
+      "room_defaults": "रूम डिफ़ॉल्ट",
+      "notifications": "सूचनाएं",
+      "ai": "एआई",
+      "immersion": "इमर्शन",
+      "audio": "ऑडियो",
+      "system": "सिस्टम",
+      "developer": "डेवलपर"
+    },
+    "ui": {
+      "save_settings": "सेटिंग्स सहेजें",
+      "cancel": "रद्द करें",
+      "loading": "लोड हो रहा है...",
+      "dashboard": "डैशबोर्ड",
+      "settings": "सेटिंग्स"
+    }
+  }
+}
