@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="build/icon.png" alt="VIRE Logo" width="150" height="150" />
+  <img src="resources/images/vire_logo.png" alt="VIRE Logo" width="150" height="150" />
   <h1>VIRE Desktop</h1>
   <p><b>A Next-Generation, AI-Powered Desktop Experience</b></p>
   
