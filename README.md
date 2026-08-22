@@ -18,13 +18,15 @@
 
 Every pixel, animation, and system integration in VIRE has been meticulously crafted to bridge the gap between heavy AI functionalities and a lightning-fast native UI.
 
-## ✨ Key Features
+## ✨ Key Features & Modules
 
 - **🧠 Deep AI Integration**: Powered by Groq, Google Generative AI, and local LLMs (`@mlc-ai/web-llm`) to offer blazing-fast, secure, and private AI interactions directly on your machine.
 - **⚡ Blazing Fast Performance**: Built on Electron with a deeply optimized React & TypeScript frontend, ensuring low latency and smooth execution.
 - **🎨 Stunning & Fluid UI/UX**: Crafted with TailwindCSS 4, Radix UI, Framer Motion, and GSAP. Enjoy buttery-smooth micro-interactions, responsive layouts, and a premium aesthetic.
 - **🔄 Real-Time Synchronization**: Backed by Supabase for secure, real-time database updates and robust authentication across devices.
 - **🎬 Rich Media & Interactions**: Fully integrated Giphy support, Lottie vector animations, native Emoji pickers, dynamic Markdown rendering, and native YouTube/video playback.
+- **🏆 Gamification System**: Built-in logic for tracking user sessions, daily logins, and awarding XP to drive engagement and retention.
+- **🖼️ Bento Grid Dashboard**: A visually striking, highly interactive dashboard layout that beautifully displays user stats and quick actions.
 
 ## 🛠️ Architecture & Tech Stack
 
@@ -90,6 +92,16 @@ This hybrid approach allows the community to explore and learn from the UI/UX im
 **VIRE is proudly built, designed, and maintained by a solo developer.** 
 
 Creating a desktop application of this scale—balancing complex local LLM execution, real-time backend synchronization, and high-fidelity animations—has been a journey of immense passion. Every line of code, UI decision, and architectural design was crafted single-handedly with the goal of pushing the boundaries of what a modern desktop app can be.
+
+## 🤝 Contributing
+
+While the core modules are proprietary and closed-source, we welcome contributions to the open-source frontend UI! If you find a bug, have a feature request, or want to improve the UI components:
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingUIFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingUIFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingUIFeature`)
+5. Open a Pull Request
 
 ## 📄 License
 

@@ -22,6 +22,8 @@ src/main/
 src/cpp/
 src/preload/
 supabase/
+src/renderer/src/lib/supabase/**/*.sql
+src/renderer/src/lib/supabase/*.sql
 vireinstaller/
 patch.mjs
 patch-layout.mjs
