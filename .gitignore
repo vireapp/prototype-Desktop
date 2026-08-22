@@ -1,9 +1,33 @@
 node_modules
 dist
 out
+build
+build-wasm.bat
+.cache
+.qodo
 .DS_Store
 .eslintcache
 *.log*
+*.log
+build.log
+build_log.txt
+tsc_output.txt
+diff.txt
 .env
 .env.*
 *.exe
+
+# Hide core logic and backend infrastructure from public repository
+src/main/
+src/cpp/
+src/preload/
+supabase/
+vireinstaller/
+patch.mjs
+patch-layout.mjs
+generate_installer_assets.ps1
+electron.vite.config.*.mjs
+test_db.js
+
+# Editor
+.vscode/

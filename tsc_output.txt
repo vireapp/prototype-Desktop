@@ -1,3 +1,0 @@
-src/renderer/src/components/messages/chat-interface.tsx(511,7): error TS1005: ')' expected.
-src/renderer/src/components/messages/chat-interface.tsx(512,5): error TS1128: Declaration or statement expected.
-src/renderer/src/components/messages/chat-interface.tsx(513,3): error TS1109: Expression expected.

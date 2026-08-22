@@ -99,6 +99,7 @@
     "@giphy/react-components": "^10.1.2",
     "@mlc-ai/web-llm": "^0.2.82",
     "boneyard-js": "^1.8.1",
+    "disposable-domains": "^2.0.1",
     "electron-log": "^5.4.3",
     "emoji-picker-react": "^4.19.1",
     "groq-sdk": "^1.1.2",
