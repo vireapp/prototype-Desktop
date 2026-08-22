@@ -10,14 +10,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Terminal, Bug, Activity, Trash2, RotateCcw, Database } from "lucide-react";
 
 export function DeveloperSettings() {
-  // Mock States - these would ideally persist to localStorage or a dev-only store
-  const [debugMode, setDebugMode] = useState(false);
-  const [showPerf, setShowPerf] = useState(false);
-  const [apiEnv, setApiEnv] = useState("prod");
+  const [debugMode, setDebugMode] = useState(() => {
+    return localStorage.getItem("dev_debugMode") === "true";
+  });
+  const [showPerf, setShowPerf] = useState(() => {
+    return localStorage.getItem("dev_showPerf") === "true";
+  });
+  const [apiEnv, setApiEnv] = useState(() => {
+    return localStorage.getItem("dev_apiEnv") || "prod";
+  });
+
+  const handleDeployChanges = () => {
+    localStorage.setItem("dev_debugMode", String(debugMode));
+    localStorage.setItem("dev_showPerf", String(showPerf));
+    localStorage.setItem("dev_apiEnv", apiEnv);
+    toast.success("Developer parameters synchronized and saved.");
+  };
 
   const handleClearCache = () => {
     localStorage.clear();
@@ -150,8 +162,8 @@ export function DeveloperSettings() {
       {/* Action */}
       <div className="flex justify-center pt-8 border-t border-border/50">
         <Button
-          className="liquid-metal rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase transition-all hover:scale-105"
-          onClick={() => toast.success("Developer parameters synchronized")}
+          className="bg-primary hover:bg-primary/90 rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase transition-all hover:scale-105"
+          onClick={handleDeployChanges}
         >
           Deploy Changes
         </Button>
@@ -159,3 +171,4 @@ export function DeveloperSettings() {
     </div>
   );
 }
+

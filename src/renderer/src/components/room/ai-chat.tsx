@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Loader2, Sparkles, Bot } from 'lucide-react'
+import { Loader2, Sparkles, Bot, Mic, MicOff } from 'lucide-react'
 import { getChatHistory } from '@/lib/ai/actions'
 import { chatWithRoomAI } from '@/lib/ai/room-actions'
 import { toast } from 'sonner'
@@ -23,6 +23,9 @@ interface RoomAIChatProps {
     game?: string
     service?: string
   }) => void
+  aiSettings?: any
+  userRole?: string
+  isActive?: boolean
 }
 
 interface Message {
@@ -44,13 +47,71 @@ export function RoomAIChat({
   roomName,
   roomDescription,
   currentActivity,
-  onCommand
+  onCommand,
+  aiSettings,
+  userRole,
+  isActive = true
 }: RoomAIChatProps): React.JSX.Element {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [isListening, setIsListening] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  
+  // Speech Recognition setup
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+  const recognitionRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = true
+      recognition.lang = 'en-US'
+
+      recognition.onresult = (event: any) => {
+        let currentTranscript = ''
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          currentTranscript += event.results[i][0].transcript
+        }
+        setInput(currentTranscript)
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+        if (event.error === 'not-allowed') {
+          toast.error('Microphone access denied')
+        }
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+  }, [SpeechRecognition])
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+    } else {
+      if (!recognitionRef.current) {
+        toast.error('Speech recognition not supported in this browser.')
+        return
+      }
+      try {
+        recognitionRef.current.start()
+        setIsListening(true)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
 
   useEffect(() => {
     const loadHistory = async (): Promise<void> => {
@@ -76,10 +137,22 @@ export function RoomAIChat({
   }, [])
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (isActive !== false && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages, isActive])
+
+  // Listen for local AI messages from QuickChatBar and room-client-v2.tsx
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleAiMsg = (e: any) => {
+      setMessages((prev) => [...prev, e.detail])
+      if (e.detail.role === 'model') setLoading(false)
+      else if (e.detail.role === 'user') setLoading(true)
+    }
+    window.addEventListener('ai-chat-message', handleAiMsg)
+    return () => window.removeEventListener('ai-chat-message', handleAiMsg)
+  }, [])
 
   const handleSend = async (): Promise<void> => {
     if (!input.trim() || loading) return
@@ -100,7 +173,9 @@ export function RoomAIChat({
         roomName,
         roomDescription: roomDescription || '',
         currentActivity: currentActivity,
-        history: history
+        history: history,
+        aiSettings,
+        userRole
       })
 
       if (result.response) {
@@ -116,7 +191,7 @@ export function RoomAIChat({
             const command = JSON.parse(commandMatch[1])
             if (onCommand) {
               onCommand(command)
-              toast.success('AI is executing command...')
+              toast.success('VIRE executed a command.')
             }
             responseText = responseText.replace(commandRegex, '').trim()
           } catch (e) {
@@ -258,31 +333,7 @@ export function RoomAIChat({
         </ScrollArea>
       </div>
 
-      <div className="p-4 pt-2">
-        <div className="relative flex items-center">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Message VIRE..."
-            className="pr-12 bg-white/10 border-white/20 hover:border-white/40 focus-visible:ring-white/50 transition-all rounded-full pl-4 text-white placeholder:text-white/40 backdrop-blur-md"
-            disabled={loading}
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute right-1 text-white/50 hover:text-white hover:bg-white/20 rounded-full h-8 w-8 transition-colors"
-            onClick={handleSend}
-            disabled={!input.trim() || loading}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-      </div>
+
     </div>
   )
 }

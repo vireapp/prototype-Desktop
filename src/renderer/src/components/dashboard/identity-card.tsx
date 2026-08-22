@@ -252,7 +252,7 @@ export function IdentityCard({ user, initialData }: IdentityCardProps): React.JS
               delay={0.15}
             />
             <StatItem
-              value="3"
+              value={data.streakCount || 0}
               label="Streak"
               icon={<Flame className="w-3.5 h-3.5 text-orange-500" strokeWidth={1.5} />}
               delay={0.2}

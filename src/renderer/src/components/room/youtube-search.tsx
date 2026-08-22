@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 
 interface YouTubeSearchProps {
-  onSelect: (url: string) => void
+  onSelect: (url: string, title?: string) => void
   categoryId?: string
   variant?: 'grid' | 'list'
 }
@@ -167,7 +167,7 @@ export function YouTubeSearch({
             {videos.map((video) => (
               <button
                 key={video.id.videoId}
-                onClick={() => onSelect(`https://www.youtube.com/watch?v=${video.id.videoId}`)}
+                onClick={() => onSelect(`https://www.youtube.com/watch?v=${video.id.videoId}`, video.snippet.title)}
                 className={
                   variant === 'grid'
                     ? 'group relative flex flex-col text-left gap-2 p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border transition-all'

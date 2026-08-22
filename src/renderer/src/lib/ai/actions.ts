@@ -5,7 +5,8 @@ import { VIRE_SYSTEM_PROMPT } from './system-prompt'
 export async function submitChat(
   message: string,
   history: any[],
-  activeUserIds: string[] = []
+  activeUserIds: string[] = [],
+  activityContext?: string
 ): Promise<{ error?: string; response?: string }> {
   try {
     const supabase = createClient()
@@ -20,7 +21,7 @@ export async function submitChat(
     // Get user profile for personalization
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, bio, date_of_birth')
       .eq('id', user.id)
       .single()
     const userName = profile?.full_name || 'Friend'
@@ -75,13 +76,22 @@ export async function submitChat(
     * **Global Active Rooms**: ${activeRooms || 0}
     * **Global Online Users**: ${globalActiveCount}
     * **Your Online Friends**: ${onlineNamesList}
+    * **Current Room Activity**: ${activityContext || 'None'}
     * **Timestamp**: ${new Date().toLocaleString()}
+    `
+
+    const userContextBlock = `
+    [USER PROFILE]
+    * **Name**: ${userName}
+    * **Bio**: ${profile?.bio || 'Not provided'}
+    * **Date of Birth**: ${profile?.date_of_birth || 'Not provided'}
+    (Use this profile data to personalize your responses, remember their interests from the bio, and understand them better. Make the chat fun and reliable based on this!)
     `
 
     const messages: any[] = [
       { 
         role: 'system', 
-        content: VIRE_SYSTEM_PROMPT.replace('${userName}', userName) + statusBlock 
+        content: VIRE_SYSTEM_PROMPT.replace('${userName}', userName) + '\n' + userContextBlock + '\n' + statusBlock 
       },
       ...history.map((msg) => ({
         role: msg.role === 'model' || msg.role === 'assistant' ? 'assistant' : 'user',
@@ -94,9 +104,9 @@ export async function submitChat(
     // Instead of initializing Groq in the renderer with a hardcoded key,
     // we now delegate the call to the main process.
     const result = await (window as any).api.aiChat(messages, {
-      model: 'llama-3.1-8b-instant',
+      model: 'qwen/qwen3.6-27b',
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 2000
     })
 
     if (result.error) {

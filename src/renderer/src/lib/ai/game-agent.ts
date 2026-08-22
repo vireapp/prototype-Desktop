@@ -32,7 +32,7 @@ Make sure the move is to an empty index (null in the board array).`
         }
       ],
       {
-        model: 'llama-3.1-8b-instant',
+        model: 'qwen/qwen3.6-27b',
         response_format: { type: 'json_object' }
       }
     )

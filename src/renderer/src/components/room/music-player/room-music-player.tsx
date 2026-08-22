@@ -42,7 +42,7 @@ interface RoomMusicPlayerProps {
   onVolumeChange: (vol: number) => void
   onStationSelect: (index: number) => void
   onNextStation: () => void
-  onAddCustomStation?: (url: string) => void
+  onAddCustomStation?: (url: string, title?: string) => void
 }
 
 export function RoomMusicPlayer({
@@ -58,7 +58,6 @@ export function RoomMusicPlayer({
   onNextStation,
   onAddCustomStation
 }: RoomMusicPlayerProps) {
-  const [activeTab, setActiveTab] = useState<'stations' | 'search'>('stations')
   const [showSidebar, setShowSidebar] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const playerRef = useRef<any>(null)
@@ -97,60 +96,12 @@ export function RoomMusicPlayer({
   
   return (
     <div
-      className="flex w-full h-full bg-black text-foreground overflow-hidden relative group/player"
+      className="flex w-full h-full bg-transparent text-foreground overflow-hidden relative group/player"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* 
-        LAYER 0: YouTube Player 
-        Crucially, this is pointer-events-auto so the user CAN click the video directly 
-        to satisfy Chrome's strict autoplay policy for unmuted audio!
-      */}
-      <div className="absolute inset-0 z-0">
-        {videoId ? (
-          <YouTube
-            videoId={videoId}
-            opts={{
-              width: '100%',
-              height: '100%',
-              playerVars: {
-                autoplay: playing ? 1 : 0,
-                controls: 0,
-                modestbranding: 1,
-                rel: 0,
-                playsinline: 1,
-                disablekb: 1,
-                iv_load_policy: 3
-              }
-            }}
-            onReady={(e) => {
-              playerRef.current = e.target
-              if (muted) e.target.mute()
-              else {
-                e.target.unMute()
-                e.target.setVolume(volume)
-              }
-              if (playing) e.target.playVideo()
-            }}
-            onPlay={() => { if (!playing) onTogglePlay() }}
-            onPause={() => { if (playing) onTogglePlay() }}
-            className="w-full h-full absolute top-0 left-0 border-0"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-white/50">
-            Invalid Station URL
-          </div>
-        )}
-      </div>
 
-      {/* LAYER 0.5: Hover & Pause Catcher */}
-      <div 
-        className={cn(
-          "absolute inset-0 z-[5]", 
-          playing ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-        )}
-        onClick={() => { if (playing) onTogglePlay() }}
-      />
 
       {/* LAYER 1: Ambient Overlay (pointer-events-none) */}
       <div 
@@ -172,108 +123,9 @@ export function RoomMusicPlayer({
           </Button>
         )}
 
-        {/* Top Gradient & Title */}
-        <div
-          className={cn(
-            'absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-8 transition-opacity duration-500 pointer-events-none',
-            isHovering || !playing ? 'opacity-100' : 'opacity-0'
-          )}
-        >
-          <div className="pointer-events-auto max-w-2xl">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest text-white/80 border border-white/5">
-                {currentStation?.type || 'station'}
-              </span>
-              {playing && (
-                <div className="flex items-end gap-1 h-3">
-                  <div className="w-1 h-3 bg-white/80 rounded-full animate-[music-bar_0.6s_ease-in-out_infinite]" />
-                  <div className="w-1 h-4 bg-white/80 rounded-full animate-[music-bar_0.8s_ease-in-out_infinite_0.1s]" />
-                  <div className="w-1 h-2 bg-white/80 rounded-full animate-[music-bar_0.5s_ease-in-out_infinite_0.2s]" />
-                </div>
-              )}
-            </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight line-clamp-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 drop-shadow-xl">
-              {currentStation?.name || 'Unknown Station'}
-            </h2>
-          </div>
-        </div>
+
 
         <div className="flex-1" />
-
-        {/* Bottom Control Bar */}
-        <div
-          className={cn(
-            'w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-24 pb-8 px-8 transition-all duration-500 flex flex-col gap-6 pointer-events-auto',
-            isHovering || !playing
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-8 pointer-events-none'
-          )}
-        >
-          {/* Progress Bar (Mock for radio/live) */}
-          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative group/timeline cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-r from-white/50 to-white w-1/3 rounded-full relative shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover/timeline:opacity-100 shadow-lg scale-150 transition-all duration-200" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() =>
-                  onStationSelect((currentStationIndex - 1 + stations.length) % stations.length)
-                }
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-colors"
-              >
-                <SkipBack className="w-5 h-5 fill-current" />
-              </Button>
-
-              <Button
-                size="icon"
-                onClick={onTogglePlay}
-                className="h-14 w-14 rounded-full bg-white text-black hover:bg-white/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-              >
-                {playing ? (
-                  <Pause className="w-6 h-6 fill-current" />
-                ) : (
-                  <Play className="w-6 h-6 fill-current ml-1" />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onNextStation}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-colors"
-              >
-                <SkipForward className="w-5 h-5 fill-current" />
-              </Button>
-
-              <div className="flex items-center gap-3 group/vol ml-4 pl-4 border-l border-white/10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onToggleMute}
-                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10 transition-colors"
-                >
-                  {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                </Button>
-                <div className="w-28 opacity-70 group-hover/vol:opacity-100 transition-opacity">
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={muted ? 0 : volume}
-                    onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white cursor-pointer hover:[&::-webkit-slider-thumb]:scale-125 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* LAYER 3: Collapsible Sidebar */}
@@ -287,32 +139,9 @@ export function RoomMusicPlayer({
         )}
       >
         <div className="flex items-center p-4 border-b border-white/5 gap-2 shrink-0 bg-white/5">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveTab('stations')}
-            className={cn(
-              'flex-1 text-xs font-bold uppercase tracking-wider rounded-lg transition-all',
-              activeTab === 'stations' 
-                ? 'bg-white/10 text-white shadow-sm' 
-                : 'text-white/50 hover:bg-white/5 hover:text-white/80'
-            )}
-          >
-            Library
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveTab('search')}
-            className={cn(
-              'flex-1 text-xs font-bold uppercase tracking-wider rounded-lg transition-all',
-              activeTab === 'search' 
-                ? 'bg-white/10 text-white shadow-sm' 
-                : 'text-white/50 hover:bg-white/5 hover:text-white/80'
-            )}
-          >
+          <div className="flex-1 text-xs font-bold uppercase tracking-wider text-white pl-2">
             Discover
-          </Button>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -323,72 +152,18 @@ export function RoomMusicPlayer({
           </Button>
         </div>
 
-        {activeTab === 'stations' && (
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-2">
-              {stations.map((station, i) => {
-                const isActive = i === currentStationIndex;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => onStationSelect(i)}
-                    className={cn(
-                      'w-full flex items-center gap-4 p-3 rounded-xl text-left transition-all group relative overflow-hidden',
-                      isActive
-                        ? 'bg-white/10 text-white shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10'
-                        : 'text-white/70 hover:bg-white/5 hover:text-white border border-transparent'
-                    )}
-                  >
-                    <div 
-                      className={cn(
-                        'w-12 h-12 rounded-lg flex items-center justify-center shrink-0 relative bg-black/40 overflow-hidden shadow-inner transition-all',
-                        isActive && 'shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                      )}
-                    >
-                      {station.type === 'youtube' ? (
-                        <YoutubeIcon className={cn("w-5 h-5", isActive ? "text-red-500" : "text-white/50")} />
-                      ) : (
-                        <Disc className={cn('w-5 h-5', isActive ? "text-white" : "text-white/50", isActive && playing && 'animate-spin-slow')} />
-                      )}
-                      
-                      {isActive && playing && (
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-0.5">
-                          <div className="w-0.5 h-3 bg-white animate-[music-bar_0.6s_ease-in-out_infinite]" />
-                          <div className="w-0.5 h-4 bg-white animate-[music-bar_0.8s_ease-in-out_infinite_0.1s]" />
-                          <div className="w-0.5 h-2 bg-white animate-[music-bar_0.5s_ease-in-out_infinite_0.2s]" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="min-w-0 flex-1 z-10">
-                      <div className={cn("font-semibold text-sm truncate transition-colors", isActive ? "text-white" : "text-white/80 group-hover:text-white")}>
-                        {station.name}
-                      </div>
-                      <div className="text-[10px] opacity-60 uppercase font-bold tracking-widest mt-1">
-                        {station.type}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        )}
-
-        {activeTab === 'search' && (
-          <div className="flex-1 flex flex-col overflow-hidden bg-black/20">
-            <YouTubeSearch
-              categoryId="10"
-              variant="list"
-              onSelect={(url: string) => {
-                if (onAddCustomStation) {
-                  onAddCustomStation(url)
-                  setActiveTab('stations')
-                }
-              }}
-            />
-          </div>
-        )}
+        <div className="flex-1 flex flex-col overflow-hidden bg-black/20">
+          <YouTubeSearch
+            categoryId="10"
+            variant="list"
+            onSelect={(url: string, title?: string) => {
+              if (onAddCustomStation) {
+                onAddCustomStation(url, title)
+                setShowSidebar(false)
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   )

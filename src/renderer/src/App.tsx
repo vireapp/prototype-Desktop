@@ -33,15 +33,18 @@ import { useEffect, useState } from 'react'
 import { UpdateNotifier } from '@/components/update-notifier'
 import { UpdatePanel } from '@/components/update-panel'
 import { TitleBar } from '@/components/TitleBar'
+import { RoomProvider } from '@/lib/room-context'
+import { GlobalRoomOverlay } from '@/components/global-room-overlay'
 
 function DeepLinkHandler(): null {
   const navigate = useNavigate()
 
   useEffect(() => {
     if (window.api && window.api.onNavigate) {
-      window.api.onNavigate((route: string) => {
+      const cleanup = window.api.onNavigate((route: string) => {
         navigate(route)
       })
+      return cleanup
     }
   }, [navigate])
 
@@ -105,117 +108,120 @@ function AppContent(): React.JSX.Element {
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       {!isTray && <TitleBar />}
       <DeepLinkHandler />
-      <Routes>
-        <Route path="/" element={<AuthRedirect />} />
-          <Route
-            path="/login"
-            element={
-              <PageShell>
-                <Login />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PageShell>
-                <Register />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <PageShell>
-                <ForgotPassword />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={
-              <PageShell>
-                <ResetPassword />
-              </PageShell>
-            }
-          />
-          {/* Dashboard has its own TitleBar inside DashboardLayout */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="friends" element={<FriendsPage />} />
-            <Route path="messages" element={<MessagesPage />} />
-            <Route path="rooms" element={<RoomsPage />} />
-            <Route path="join" element={<JoinRoom />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="shop" element={<ShopPage />} />
-            <Route path="ai" element={<AIFullPage />} />
-          </Route>
-          <Route
-            path="/room/:id"
-            element={
-              <PageShell>
-                <SingleRoomPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/community"
-            element={
-              <PageShell>
-                <CommunityPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/discover"
-            element={
-              <PageShell>
-                <DiscoverPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/onboarding"
-            element={
-              <PageShell>
-                <OnboardingPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <PageShell>
-                <AboutPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/changelog"
-            element={
-              <PageShell>
-                <ChangelogPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/privacy"
-            element={
-              <PageShell>
-                <PrivacyPage />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/terms"
-            element={
-              <PageShell>
-                <TermsPage />
-              </PageShell>
-            }
-          />
-          <Route path="/tray" element={<TrayMenu />} />
-        </Routes>
+      <RoomProvider>
+        <Routes>
+          <Route path="/" element={<AuthRedirect />} />
+            <Route
+              path="/login"
+              element={
+                <PageShell>
+                  <Login />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PageShell>
+                  <Register />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PageShell>
+                  <ForgotPassword />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PageShell>
+                  <ResetPassword />
+                </PageShell>
+              }
+            />
+            {/* Dashboard has its own TitleBar inside DashboardLayout */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="friends" element={<FriendsPage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="rooms" element={<RoomsPage />} />
+              <Route path="join" element={<JoinRoom />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="shop" element={<ShopPage />} />
+              <Route path="ai" element={<AIFullPage />} />
+            </Route>
+            <Route
+              path="/room/:id"
+              element={
+                <PageShell>
+                  <SingleRoomPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/community"
+              element={
+                <PageShell>
+                  <CommunityPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/discover"
+              element={
+                <PageShell>
+                  <DiscoverPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/onboarding"
+              element={
+                <PageShell>
+                  <OnboardingPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <PageShell>
+                  <AboutPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/changelog"
+              element={
+                <PageShell>
+                  <ChangelogPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <PageShell>
+                  <PrivacyPage />
+                </PageShell>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <PageShell>
+                  <TermsPage />
+                </PageShell>
+              }
+            />
+            <Route path="/tray" element={<TrayMenu />} />
+          </Routes>
+        <GlobalRoomOverlay />
+      </RoomProvider>
       <Toaster
         theme="dark"
         position="bottom-right"

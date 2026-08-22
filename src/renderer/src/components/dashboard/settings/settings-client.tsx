@@ -16,12 +16,13 @@ import { AISettings } from './sections/AISettings'
 import { ImmersionSettings } from './sections/ImmersionSettings'
 import { RoomDefaultsSettings } from './sections/RoomDefaultsSettings'
 import { SecuritySettings } from './sections/SecuritySettings'
-import { PreferencesSettings } from './sections/PreferencesSettings'
 import { DataSettings } from './sections/DataSettings'
 import { AudioSettings } from './sections/AudioSettings'
 import { SystemSettings } from './sections/SystemSettings'
 import { AccessibilitySettings } from './sections/AccessibilitySettings'
+import { PreferencesSettings } from './sections/PreferencesSettings'
 import { LanguageRegionSettings } from './sections/LanguageRegionSettings'
+import { DeveloperSettings } from './sections/DeveloperSettings'
 
 interface Profile {
   full_name: string | null
@@ -226,6 +227,7 @@ export function SettingsClient({
                 )}
                 {activeSection === 'audio' && <AudioSettings />}
                 {activeSection === 'system' && <SystemSettings />}
+                {activeSection === 'developer' && <DeveloperSettings />}
                 {activeSection === 'immersion' && (
                   <ImmersionSettings
                     initialSounds={settings?.ui_sounds}
@@ -242,3 +244,5 @@ export function SettingsClient({
     </div>
   )
 }
+
+

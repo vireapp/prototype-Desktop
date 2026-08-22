@@ -9,7 +9,9 @@ const api = {
     return () => ipcRenderer.removeListener(channel, subscription)
   },
   onNavigate: (callback: (route: string) => void) => {
-    ipcRenderer.on('navigate-to', (_event, route) => callback(route))
+    const subscription = (_event, route) => callback(route)
+    ipcRenderer.on('navigate-to', subscription)
+    return () => ipcRenderer.removeListener('navigate-to', subscription)
   },
   setProgress: (value: number) => ipcRenderer.send('set-progress', value),
   setBadgeCount: (count: number) => ipcRenderer.send('set-badge-count', count),

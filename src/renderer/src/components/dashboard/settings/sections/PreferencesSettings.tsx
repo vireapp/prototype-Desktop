@@ -110,7 +110,7 @@ export function PreferencesSettings({
         <Button
           onClick={handleSave}
           disabled={isPending}
-          className="liquid-metal rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105"
+          className="bg-primary hover:bg-primary/90 rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105"
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save Preferences
@@ -119,3 +119,4 @@ export function PreferencesSettings({
     </div>
   );
 }
+

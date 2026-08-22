@@ -121,29 +121,7 @@ export function SystemSettings() {
         </div>
       </section>
 
-      {/* Accessibility */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <Type className="w-4 h-4 text-indigo-400/70" />
-          <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground/70">Accessibility</h3>
-        </div>
-        <div className="p-5 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Text Scaling</Label>
-              <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-md">{textScale}%</span>
-            </div>
-            <Slider 
-              value={[textScale]} 
-              onValueChange={([v]) => setSetting('textScale', v)} 
-              min={80} 
-              max={150} 
-              step={5} 
-            />
-            <p className="text-[11px] text-muted-foreground">Adjust the global font size for better readability.</p>
-          </div>
-        </div>
-      </section>
+
 
       {/* Shortcuts */}
       <section className="space-y-4">
@@ -177,3 +155,4 @@ export function SystemSettings() {
     </div>
   )
 }
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Headphones, UserPlus, MessageSquare, Store, Radio } from 'lucide-react'
+import { Headphones, UserPlus, MessageSquare, Store } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 
@@ -73,30 +73,11 @@ export function QuickActions() {
           </Link>
         </motion.div>
       ))}
-
-      {/* Discover pill */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.93 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.26, duration: 0.25 }}
-      >
-        <Link
-          to="/discover"
-          draggable="false"
-          onContextMenu={(e) => e.preventDefault()}
-          className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border text-muted-foreground/70 hover:border-emerald-500/30 hover:bg-emerald-500/[0.05] hover:text-emerald-300 transition-all duration-200 shrink-0"
-        >
-          <span className="shrink-0 text-emerald-400">
-            <Radio className="w-3.5 h-3.5" />
-          </span>
-          <span className="text-[12.5px] font-medium whitespace-nowrap">Discover</span>
-        </Link>
-      </motion.div>
     </motion.div>
   )
 }
 
-export function DashboardGreeting({ username }: { username: string }) {
+export function DashboardGreeting({ username, clockFormat }: { username: string, clockFormat?: string }) {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -110,6 +91,8 @@ export function DashboardGreeting({ username }: { username: string }) {
   else if (hour < 12) greeting = 'Good morning'
   else if (hour < 18) greeting = 'Good afternoon'
   else greeting = 'Good evening'
+
+  const timeString = clockFormat === '12h' ? format(now, 'hh:mm a') : format(now, 'HH:mm')
 
   return (
     <div className="relative">
@@ -138,7 +121,7 @@ export function DashboardGreeting({ username }: { username: string }) {
 
         <div className="text-right shrink-0">
           <p className="text-[22px] font-mono font-light text-foreground/60 tabular-nums leading-none tracking-tight">
-            {format(now, 'HH:mm')}
+            {timeString}
           </p>
           <p className="text-[11px] text-muted-foreground/35 mt-1.5">
             {format(now, 'EEE, MMM d')}

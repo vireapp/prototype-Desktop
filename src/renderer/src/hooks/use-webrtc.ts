@@ -43,6 +43,8 @@ export function useWebRTC(
   // We keep state for UI if needed, but primary logic uses Ref for stability
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [channel, setChannel] = useState<RealtimeChannel | null>(null)
+  const [micActive, setMicActive] = useState(true)
+  const [cameraActive, setCameraActive] = useState(true)
 
   // Debug State
   const [debugInfo, setDebugInfo] = useState<{
@@ -119,6 +121,8 @@ export function useWebRTC(
           addLog(`[WebRTC] Local Media Access Granted ${stream.id}`)
           setLocalStream(stream)
           localStreamRef.current = stream
+          setMicActive(stream.getAudioTracks().some(t => t.enabled))
+          setCameraActive(stream.getVideoTracks().some(t => t.enabled && !t.label.toLowerCase().includes('screen')))
 
           // Add tracks to existing peers (if any connected before media was ready)
           Object.entries(peersRef.current).forEach(([userId, pc]) => {
@@ -590,13 +594,16 @@ export function useWebRTC(
   }
 
   // --- Controls ---
-  const toggleMic = useCallback(() => {
+  const toggleMic = useCallback(async () => {
     if (localStreamRef.current) {
       addLog('[WebRTC] Toggling Mic')
+      let newState = false
       localStreamRef.current.getAudioTracks().forEach((t) => {
         t.enabled = !t.enabled
+        newState = t.enabled
         addLog(`[WebRTC] Set Local Track ${t.id} enabled=${t.enabled}`)
       })
+      setMicActive(newState)
 
       // Explicitly sync with PC senders to be sure
       Object.values(peersRef.current).forEach((pc) => {
@@ -619,18 +626,23 @@ export function useWebRTC(
           }
         })
       })
+      return true
     } else {
       addLog('[WebRTC] Toggle Mic Failed: No local stream')
+      return false
     }
   }, [])
 
-  const toggleCamera = useCallback(() => {
+  const toggleCamera = useCallback(async () => {
     if (localStreamRef.current) {
       addLog('[WebRTC] Toggling Camera')
+      let newState = false
       localStreamRef.current.getVideoTracks().forEach((t) => {
         t.enabled = !t.enabled
+        newState = t.enabled
         addLog(`[WebRTC] Set Local Video Track ${t.id} enabled=${t.enabled}`)
       })
+      setCameraActive(newState)
       // Explicitly sync PC senders
       Object.values(peersRef.current).forEach((pc) => {
         pc.getSenders().forEach((sender) => {
@@ -646,7 +658,9 @@ export function useWebRTC(
           }
         })
       })
+      return true
     }
+    return false
   }, [])
 
   const toggleScreenShare = useCallback(async (sourceId?: string) => {
@@ -665,6 +679,7 @@ export function useWebRTC(
 
         localStreamRef.current.removeTrack(videoTrack)
         localStreamRef.current.addTrack(camTrack)
+        setCameraActive(camTrack.enabled)
 
         Object.values(peersRef.current).forEach((pc) => {
           const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
@@ -756,6 +771,8 @@ export function useWebRTC(
     localStream,
     remoteStreams,
     participants,
+    micActive,
+    cameraActive,
     toggleMic,
     toggleCamera,
     toggleScreenShare,

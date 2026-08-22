@@ -32,15 +32,9 @@ export function DesktopSync() {
       })
     })
 
-    // 3. Navigation Sync (from Deep Links)
-    const removeNavListener = window.api.on('navigate-to', (path: string) => {
-      navigate(path)
-    })
-
     return () => {
       removeStatusListener()
       removeMuteListener()
-      removeNavListener()
     }
   }, [setUserStatus, setNoiseSettings, navigate])
 

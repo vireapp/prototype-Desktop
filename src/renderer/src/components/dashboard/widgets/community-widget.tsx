@@ -40,28 +40,15 @@ export function CommunityWidget() {
 
       setTotalCount(count)
 
-      // Get most recent / active members
+      // Get all users who joined
       const { data } = await supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url, status, level')
         .neq('id', user.id)
-        .in('status', ['online', 'in-room'])
-        .limit(8)
+        .order('created_at', { ascending: false })
+        .limit(100)
 
-      // If not enough online, pad with others
-      let results = data || []
-      if (results.length < 5) {
-        const existingIds = results.map((p) => p.id)
-        const { data: extra } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url, status, level')
-          .neq('id', user.id)
-          .not('id', 'in', `(${existingIds.join(',') || 'null'})`)
-          .limit(8 - results.length)
-        results = [...results, ...(extra || [])]
-      }
-
-      setProfiles(results)
+      setProfiles(data || [])
       setLoading(false)
     }
     load()
@@ -82,12 +69,6 @@ export function CommunityWidget() {
             </p>
           </div>
         </div>
-        <Link
-          to="/community"
-          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border transition-all"
-        >
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
 
       {/* Profiles list */}
@@ -144,17 +125,6 @@ export function CommunityWidget() {
             })}
           </AnimatePresence>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-white/[0.04] px-5 py-3 shrink-0">
-        <Link
-          to="/community"
-          className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Users className="w-3.5 h-3.5" />
-          Browse all members
-        </Link>
       </div>
     </div>
   )

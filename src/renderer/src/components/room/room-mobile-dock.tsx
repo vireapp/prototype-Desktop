@@ -1,112 +1,126 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, LayoutGrid, Users, Music2, Home, Bot } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, Menu, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface RoomMobileDockProps {
-  unreadCount?: number
-  activeTab: 'none' | 'chat' | 'activities' | 'people' | 'music' | 'menu' | 'ai'
-  onTabChange: (tab: 'none' | 'chat' | 'activities' | 'people' | 'music' | 'menu' | 'ai') => void
+  unreadCount?: number;
+  activeTab: "none" | "chat" | "activities" | "people" | "music" | "menu" | "ai";
+  onTabChange: (tab: "none" | "chat" | "activities" | "people" | "music" | "menu" | "ai") => void;
+  isAudioEnabled: boolean;
+  toggleAudio: () => void;
+  isVideoEnabled: boolean;
+  toggleVideo: () => void;
 }
 
-export function RoomMobileDock({ unreadCount = 0, activeTab, onTabChange }: RoomMobileDockProps) {
-  const [pressedTab, setPressedTab] = useState<string | null>(null)
-
-  const tabs = [
-    { id: 'home', icon: Home, label: 'Home', color: 'from-white/20 to-white/10' },
-    {
-      id: 'chat',
-      icon: MessageSquare,
-      label: 'Chat',
-      color: 'from-indigo-500/30 to-indigo-600/20'
-    },
-    { id: 'ai', icon: Bot, label: 'AI', color: 'from-rose-500/30 to-rose-600/20' },
-    {
-      id: 'activities',
-      icon: LayoutGrid,
-      label: 'Apps',
-      color: 'from-purple-500/30 to-purple-600/20'
-    },
-    { id: 'music', icon: Music2, label: 'Music', color: 'from-pink-500/30 to-pink-600/20' },
-    { id: 'people', icon: Users, label: 'People', color: 'from-orange-500/30 to-orange-600/20' }
-  ] as const
+export function RoomMobileDock({
+  unreadCount = 0,
+  activeTab,
+  onTabChange,
+  isAudioEnabled,
+  toggleAudio,
+  isVideoEnabled,
+  toggleVideo,
+}: RoomMobileDockProps) {
+  const [pressedTab, setPressedTab] = useState<string | null>(null);
 
   const handleTabPress = (tabId: string) => {
-    setPressedTab(tabId)
-    setTimeout(() => setPressedTab(null), 150)
+    setPressedTab(tabId);
+    setTimeout(() => setPressedTab(null), 150);
 
-    const isHome = tabId === 'home'
-    const isActive = activeTab === tabId
+    if (tabId === "audio") {
+      toggleAudio();
+      return;
+    }
+    if (tabId === "video") {
+      toggleVideo();
+      return;
+    }
+
+    const isActive = activeTab === tabId;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onTabChange(isHome ? 'none' : isActive ? 'none' : (tabId as any))
-  }
+    onTabChange(isActive ? "none" : (tabId as any));
+  };
+
+  // We define the 4 main actions for the mobile dock
+  const actions = [
+    {
+      id: "audio",
+      icon: isAudioEnabled ? Mic : MicOff,
+      label: isAudioEnabled ? "Mute" : "Unmute",
+      isActive: false,
+      isToggle: true,
+      color: isAudioEnabled ? "text-white" : "text-red-500",
+      bg: isAudioEnabled ? "" : "bg-red-500/10",
+    },
+    {
+      id: "video",
+      icon: isVideoEnabled ? Video : VideoOff,
+      label: isVideoEnabled ? "Stop Video" : "Start Video",
+      isActive: false,
+      isToggle: true,
+      color: isVideoEnabled ? "text-white" : "text-red-500",
+      bg: isVideoEnabled ? "" : "bg-red-500/10",
+    },
+    {
+      id: "chat",
+      icon: MessageSquare,
+      label: "Chat",
+      isActive: activeTab === "chat",
+      isToggle: false,
+      color: activeTab === "chat" ? "text-indigo-400" : "text-white/70",
+      bg: activeTab === "chat" ? "bg-indigo-500/10" : "",
+    },
+    {
+      id: "menu",
+      icon: Menu,
+      label: "More",
+      isActive: activeTab === "menu",
+      isToggle: false,
+      color: activeTab === "menu" ? "text-white" : "text-white/70",
+      bg: activeTab === "menu" ? "bg-white/10" : "",
+    },
+  ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[70] pointer-events-auto pb-safe px-3">
-      {/* Floating Capsule Container */}
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[70] pointer-events-auto pb-safe px-4 mb-4">
       <motion.div
-        className="relative mx-auto max-w-md bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[28px] overflow-hidden"
+        className="relative mx-auto max-w-sm bg-[#0d0d10]/95 backdrop-blur-2xl border border-white/[0.1] rounded-full overflow-hidden shadow-2xl"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{
-          type: 'spring',
+          type: "spring",
           stiffness: 400,
           damping: 30,
-          delay: 0.2
+          delay: 0.1,
         }}
       >
-        {/* Subtle Inner Highlight */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-        {/* Active tab background blob */}
-        <AnimatePresence>
-          {activeTab !== 'none' && (
-            <motion.div
-              layoutId="dock-active-blob"
-              className={cn(
-                'absolute top-2 bottom-2 w-16 rounded-2xl bg-gradient-to-b',
-                tabs.find((t) => t.id === activeTab)?.color || 'from-white/20 to-white/10'
-              )}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              style={{
-                left: `${tabs.findIndex((t) => t.id === activeTab) * (100 / tabs.length) + 100 / tabs.length / 2 - 8}%`,
-                transform: 'translateX(-50%)'
-              }}
-            />
-          )}
-        </AnimatePresence>
-
         {/* Navigation Items */}
-        <div className="relative flex items-center justify-around p-2 gap-1">
-          {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
-          {tabs.map((tab, index) => {
-            const isActive = activeTab === tab.id
-            const isPressed = pressedTab === tab.id
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const isHome = tab.id === 'home'
+        <div className="relative flex items-center justify-between p-2">
+          {actions.map((action) => {
+            const isPressed = pressedTab === action.id;
 
             return (
               <motion.button
-                key={tab.id}
-                onClick={() => handleTabPress(tab.id)}
+                key={action.id}
+                onClick={() => handleTabPress(action.id)}
                 suppressHydrationWarning
-                className="group relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl focus:outline-none"
+                className={cn(
+                  "group relative flex flex-col items-center justify-center w-[4.5rem] h-12 rounded-full transition-colors",
+                  action.bg,
+                )}
                 whileTap={{ scale: 0.9 }}
                 animate={{
-                  scale: isPressed ? 0.9 : 1
+                  scale: isPressed ? 0.9 : 1,
                 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
-                {/* Haptic-style flash on press */}
                 <AnimatePresence>
                   {isPressed && (
                     <motion.div
-                      className="absolute inset-0 bg-white/30 rounded-2xl"
+                      className="absolute inset-0 bg-white/20 rounded-full"
                       initial={{ opacity: 1 }}
                       animate={{ opacity: 0 }}
                       exit={{ opacity: 0 }}
@@ -115,73 +129,46 @@ export function RoomMobileDock({ unreadCount = 0, activeTab, onTabChange }: Room
                   )}
                 </AnimatePresence>
 
-                {/* Icon Container */}
                 <motion.div
                   className={cn(
-                    'relative p-2.5 rounded-xl transition-colors duration-300',
-                    isActive ? 'text-white' : 'text-white/40'
+                    "relative p-2 rounded-xl transition-colors duration-300 flex items-center justify-center",
+                    action.color,
                   )}
                   animate={{
-                    y: isActive ? -2 : 0,
-                    scale: isActive ? 1.1 : 1
+                    scale: action.isActive ? 1.1 : 1,
                   }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
                 >
-                  <motion.div
-                    animate={{
-                      rotate: isActive ? [0, -5, 5, 0] : 0
-                    }}
-                    transition={{
-                      duration: 0.4,
-                      ease: 'easeInOut',
-                      delay: isActive ? 0.1 : 0
-                    }}
-                  >
-                    <tab.icon
-                      className={cn(
-                        'w-5 h-5 transition-all duration-300',
-                        isActive && 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-                      )}
-                      fill={isActive ? 'currentColor' : 'none'}
-                    />
-                  </motion.div>
+                  <action.icon
+                    className={cn(
+                      "w-6 h-6 transition-all duration-300",
+                      action.isActive && "drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]",
+                    )}
+                    fill={action.isActive && action.id !== "menu" ? "currentColor" : "none"}
+                  />
 
                   {/* Notification Badge */}
-                  {tab.id === 'chat' && unreadCount > 0 && !isActive && (
+                  {action.id === "chat" && unreadCount > 0 && !action.isActive && (
                     <motion.div
-                      className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-red-500 rounded-full flex items-center justify-center border-2 border-black"
+                      className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full flex items-center justify-center border-2 border-zinc-900"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
                     >
-                      <span className="text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                      <span className="text-[10px] font-bold text-white leading-none">
+                        {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     </motion.div>
                   )}
                 </motion.div>
 
-                {/* Active indicator dot */}
-                <motion.div
-                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-white"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{
-                    scale: isActive ? 1 : 0,
-                    opacity: isActive ? 1 : 0
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                />
-
-                {/* Label (shown on hover/focus for accessibility) */}
-                <span className="sr-only">{tab.label}</span>
+                {/* Label for accessibility */}
+                <span className="sr-only">{action.label}</span>
               </motion.button>
-            )
+            );
           })}
         </div>
-
-        {/* Bottom glow line */}
-        <div className="absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </motion.div>
     </div>
-  )
+  );
 }

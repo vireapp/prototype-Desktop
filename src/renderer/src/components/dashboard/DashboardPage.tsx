@@ -8,7 +8,6 @@ import { DashboardSkeleton } from '@/components/dashboard/skeleton'
 // Widgets
 import { ProfileCommandWidget } from '@/components/dashboard/widgets/profile-command-widget'
 import { FriendsWidget } from '@/components/dashboard/widgets/friends-widget'
-import { NotificationsWidget } from '@/components/dashboard/widgets/notifications-widget'
 import { ActiveRoomsWidget } from '@/components/dashboard/widgets/rooms-widget'
 import { CommunityWidget } from '@/components/dashboard/widgets/community-widget'
 import { AICompanionWidget } from '@/components/dashboard/widgets/ai-widget'
@@ -42,7 +41,13 @@ export function DashboardPage(): React.JSX.Element | null {
         .eq('id', user.id)
         .single()
 
-      setUserWithProfile({ ...user, profile })
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      setUserWithProfile({ ...user, profile, settings })
       setIsLoading(false)
     }
     fetchData()
@@ -66,7 +71,7 @@ export function DashboardPage(): React.JSX.Element | null {
       <ActivityTracker />
 
       {/* Greeting */}
-      <DashboardGreeting username={username} />
+      <DashboardGreeting username={username} clockFormat={userWithProfile.settings?.clock_format || '24h'} />
 
       {/* Quick action buttons */}
       <QuickActions />
@@ -83,13 +88,10 @@ export function DashboardPage(): React.JSX.Element | null {
           </motion.div>
         </div>
 
-        {/* Col 2: Friends + Notifications */}
+        {/* Col 2: Friends */}
         <div className="flex flex-col gap-4">
           <motion.div {...fadeUp(0.2)} className="min-h-[360px]">
             <FriendsWidget />
-          </motion.div>
-          <motion.div {...fadeUp(0.25)} className="min-h-[300px]">
-            <NotificationsWidget />
           </motion.div>
         </div>
 

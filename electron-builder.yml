@@ -2,6 +2,8 @@ appId: in.xvire.app
 productName: VIRE
 npmRebuild: false
 nodeGypRebuild: false
+directories:
+  output: vireinstaller
 win:
   icon: build/icon.ico
   executableName: VIRE
@@ -29,4 +31,4 @@ asarUnpack:
 publish:
   provider: github
   owner: vireapp
-  repo: prototype
+  repo: prototype-Desktop

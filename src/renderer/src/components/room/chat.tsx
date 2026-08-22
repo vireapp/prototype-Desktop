@@ -34,6 +34,8 @@ interface RoomChatProps {
   slowModeSeconds?: number
   emojiOnly?: boolean
   blockLinks?: boolean
+  isActive?: boolean
+  onMessageSent?: (msg: string) => void
 }
 
 export function RoomChat({
@@ -43,7 +45,9 @@ export function RoomChat({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   slowModeSeconds = 0,
   emojiOnly = false,
-  blockLinks = false
+  blockLinks = false,
+  isActive = true,
+  onMessageSent
 }: RoomChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -105,6 +109,16 @@ export function RoomChat({
     }
   }, [roomId, supabase])
 
+  // Listen for local messages from QuickChatBar
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleLocalMsg = (e: any) => {
+      setMessages((prev) => [...prev, e.detail])
+    }
+    window.addEventListener('local-chat-message', handleLocalMsg)
+    return () => window.removeEventListener('local-chat-message', handleLocalMsg)
+  }, [])
+
   const handleClaimDrop = async (msgId: string, amount: number) => {
     // Optimistic claim
     setMessages((prev) => prev.map(m => m.id === msgId ? { ...m, claimedBy: currentUser?.id || 'guest', claimedByName: currentUser?.user_metadata?.full_name || 'You' } : m))
@@ -119,10 +133,10 @@ export function RoomChat({
   }
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (isActive !== false && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages, isActive])
 
   const handleSend = async () => {
     if (!input.trim() || isSending) return
@@ -170,6 +184,10 @@ export function RoomChat({
       event: 'chat_message',
       payload: msg
     })
+
+    if (onMessageSent) {
+      onMessageSent(msg.content)
+    }
 
     // 5% chance for a random coin drop when sending a normal message
     if (!isDropCommand && Math.random() < 0.05) {
@@ -325,85 +343,7 @@ export function RoomChat({
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <motion.div
-        className="p-3 border-t border-white/5"
-        initial={false}
-        animate={{
-          backgroundColor: isFocused ? 'var(--accent)' : 'transparent'
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="relative">
-          <motion.div
-            className={cn(
-              'flex items-center gap-2 rounded-full border transition-all duration-300',
-              isFocused
-                ? 'border-white/20 bg-white/5 shadow-2xl backdrop-blur-md'
-                : 'border-white/5 bg-black/20 backdrop-blur-sm'
-            )}
-            initial={false}
-            animate={{
-              scale: isFocused ? 1.01 : 1
-            }}
-          >
-            {/* Emoji button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 h-10 w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent ml-1"
-            >
-              <Smile className="w-5 h-5" />
-            </Button>
 
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={emojiOnly ? 'Send an emoji...' : 'Type a message...'}
-              className="flex-1 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground px-0"
-            />
-
-            {/* Send button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="icon"
-                onClick={handleSend}
-                disabled={!input.trim() || isSending}
-                className={cn(
-                  'h-9 w-9 rounded-full mr-1 transition-all duration-300',
-                  input.trim()
-                    ? 'bg-white/20 text-white shadow-md hover:bg-white/30 backdrop-blur-md border border-white/10'
-                    : 'bg-white/5 text-white/30'
-                )}
-              >
-                {isSending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            </motion.div>
-          </motion.div>
-
-          {/* Character count (optional - shows when typing) */}
-          <AnimatePresence>
-            {input.length > 50 && (
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                className="absolute -top-6 right-2 text-[10px] text-white/30"
-              >
-                {input.length}/500
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
     </div>
   )
 }

@@ -26,6 +26,7 @@ interface RoomMembersListProps {
   onSwitchToList?: () => void
   isGridView?: boolean
   hideHeader?: boolean
+  isAIPresent?: boolean
 }
 
 type MemberWithProfile = {
@@ -48,7 +49,8 @@ export function RoomMembersList({
   onSwitchToGrid,
   onSwitchToList,
   isGridView = false,
-  hideHeader = false
+  hideHeader = false,
+  isAIPresent = false
 }: RoomMembersListProps) {
   const [members, setMembers] = useState<MemberWithProfile[]>([])
   const [loading, setLoading] = useState(true)
@@ -148,6 +150,23 @@ export function RoomMembersList({
     )
   }
 
+  const displayMembers = isAIPresent
+    ? [
+        ...members,
+        {
+          id: 'ai-member',
+          user_id: 'vire_ai',
+          role: 'member' as RoomRole,
+          joined_at: new Date().toISOString(),
+          profile: {
+            id: 'vire_ai',
+            full_name: 'VIRE AI',
+            avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=vire'
+          }
+        }
+      ]
+    : members
+
   return (
     <div className="flex flex-col h-full min-h-[300px]">
       {!hideHeader && (
@@ -222,8 +241,8 @@ export function RoomMembersList({
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
-          {members.map((member) => {
-            const isOnline = onlineUserIds.includes(member.user_id)
+          {displayMembers.map((member) => {
+            const isOnline = member.user_id === 'vire_ai' ? true : onlineUserIds.includes(member.user_id)
             return (
               <div
                 key={member.id}

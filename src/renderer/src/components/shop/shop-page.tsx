@@ -300,7 +300,7 @@ export function ShopPage(): React.JSX.Element {
   const featuredItems = itemsWithOwnership.filter((item) => item.featured)
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 p-6 pt-10 pb-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

@@ -8,6 +8,9 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSystemSettings } from "@/stores/use-system-settings";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 
 interface AccessibilityProps {
   initialReducedMotion?: boolean;
@@ -25,6 +28,8 @@ export function AccessibilitySettings({
   const [reducedMotion, setReducedMotion] = useState(initialReducedMotion);
   const [colorblindMode, setColorblindMode] = useState(initialColorblindMode);
   const [screenReader, setScreenReader] = useState(initialScreenReader);
+
+  const { textScale, setSetting } = useSystemSettings();
 
   // Live Previews
   useEffect(() => {
@@ -152,6 +157,28 @@ export function AccessibilitySettings({
             ))}
           </div>
         </div>
+
+        <div className="space-y-6">
+          <span className="block text-center text-xs uppercase tracking-widest text-muted-foreground">
+            Text Scaling{" "}
+            <span className="inline-block align-middle ml-1">
+              <InfoTooltip content="Adjust the global font size for better readability." />
+            </span>
+          </span>
+          <div className="p-5 rounded-[calc(var(--radius)+0.25rem)] bg-muted/50 border border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Scale</Label>
+              <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-md">{textScale}%</span>
+            </div>
+            <Slider 
+              value={[textScale]} 
+              onValueChange={([v]) => setSetting('textScale', v)} 
+              min={80} 
+              max={150} 
+              step={5} 
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end pt-12">
@@ -159,7 +186,7 @@ export function AccessibilitySettings({
           type="submit"
           disabled={isPending}
           className={cn(
-            "liquid-metal rounded-[var(--radius)] h-10 px-8 text-xs font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105",
+            "bg-primary hover:bg-primary/90 rounded-[var(--radius)] h-10 px-8 text-xs font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105",
             isPending && "opacity-70",
           )}
         >
@@ -170,3 +197,4 @@ export function AccessibilitySettings({
     </form>
   );
 }
+

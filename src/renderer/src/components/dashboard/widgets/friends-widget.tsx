@@ -64,11 +64,13 @@ export function FriendsWidget() {
 
   // Sort: online first, then in-room, then others
   const sorted = [...friends].sort((a, b) => {
-    const order = ['online', 'in-room', 'invisible', 'offline', null]
-    return (order.indexOf(a.status) ?? 999) - (order.indexOf(b.status) ?? 999)
+    const aActual = onlineUsers.has(a.id) ? (a.status || 'online') : 'offline'
+    const bActual = onlineUsers.has(b.id) ? (b.status || 'online') : 'offline'
+    const order = ['online', 'in-room', 'invisible', 'offline']
+    return (order.indexOf(aActual) ?? 999) - (order.indexOf(bActual) ?? 999)
   })
 
-  const onlineCount = friends.filter(f => onlineUsers.has(f.id) || f.status === 'online' || f.status === 'in-room').length
+  const onlineCount = friends.filter(f => onlineUsers.has(f.id) && f.status !== 'invisible').length
 
   return (
     <div className="rounded-xl overflow-hidden flex flex-col h-full bg-card border border-border">
@@ -120,11 +122,12 @@ export function FriendsWidget() {
         ) : (
           <AnimatePresence>
             {sorted.map((friend, i) => {
-              const isOnline = onlineUsers.has(friend.id) || friend.status === 'online' || friend.status === 'in-room'
-              const dotColor = isOnline
-                ? (friend.status === 'in-room' ? STATUS_DOT['in-room'] : STATUS_DOT.online)
-                : STATUS_DOT[friend.status ?? 'offline']
-              const statusLabel = STATUS_LABEL[friend.status ?? 'offline']
+              const isActuallyOnline = onlineUsers.has(friend.id)
+              const displayStatus = isActuallyOnline ? (friend.status || 'online') : 'offline'
+              
+              const isOnline = displayStatus === 'online' || displayStatus === 'in-room'
+              const dotColor = STATUS_DOT[displayStatus] || STATUS_DOT.offline
+              const statusLabel = STATUS_LABEL[displayStatus] || STATUS_LABEL.offline
 
               return (
                 <motion.div

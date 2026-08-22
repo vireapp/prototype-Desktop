@@ -382,3 +382,46 @@ export async function kickMember(
   if (error) throw new Error(error.message)
   return { success: true }
 }
+
+export async function getRoomBans(roomId: string): Promise<any[]> {
+  const supabase = createClient()
+  
+  const { data, error } = await supabase
+    .from('room_bans')
+    .select('*, profile:profiles!room_bans_user_id_fkey(id, full_name, username, avatar_url)')
+    .eq('room_id', roomId)
+    
+  if (error) {
+    // Fallback if foreign key isn't explicitly named like that
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('room_bans')
+      .select('*, profile:user_id(id, full_name, username, avatar_url)')
+      .eq('room_id', roomId)
+      
+    if (fallbackError) {
+      console.warn("Could not fetch room bans", fallbackError)
+      return []
+    }
+    return fallbackData || []
+  }
+  
+  return data || []
+}
+
+export async function unbanRoomUser(roomId: string, userId: string): Promise<{ success: boolean }> {
+  const supabase = createClient()
+  const currentUserRole = await getRoomRole(roomId)
+  
+  if (currentUserRole !== 'owner' && currentUserRole !== 'admin' && currentUserRole !== 'moderator') {
+    throw new Error('Unauthorized to unban members.')
+  }
+  
+  const { error } = await supabase
+    .from('room_bans')
+    .delete()
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+    
+  if (error) throw new Error(error.message)
+  return { success: true }
+}

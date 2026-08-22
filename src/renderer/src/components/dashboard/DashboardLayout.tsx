@@ -89,7 +89,7 @@ export function DashboardLayout(): React.JSX.Element | null {
             </main>
           </div>
 
-          {/* Global AI Panel (absolute within this container, overlays content but not sidebar) */}
+          {/* Global AI Panel (structurally integrated, pushes content) */}
           <AIPanel />
         </div>
 

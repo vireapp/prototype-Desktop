@@ -66,11 +66,12 @@ export async function generateRoomConfig(prompt: string): Promise<RoomConfig> {
           content: `User request: ${prompt}`
         }
       ],
-      model: 'llama-3.1-8b-instant',
+      model: 'qwen/qwen3.6-27b',
       response_format: { type: 'json_object' } // Groq respects this well
     })
 
-    const responseText = response.choices[0]?.message?.content || ''
+    let responseText = response.choices[0]?.message?.content || ''
+    responseText = responseText.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim()
     
     // Safety check: Clean response (remove markdown or preamble)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/)

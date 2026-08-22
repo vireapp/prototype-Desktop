@@ -20,6 +20,7 @@ interface VideoGridProps {
   canToggleMic: boolean
   canToggleCam: boolean
   canToggleScreen: boolean
+  isMinimized?: boolean
 }
 
 export function VideoGrid({
@@ -32,9 +33,11 @@ export function VideoGrid({
   isMicOn,
   isCamOn,
   disableVideo,
+  volume,
   canToggleMic,
   canToggleCam,
-  canToggleScreen
+  canToggleScreen,
+  isMinimized
 }: VideoGridProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null)
   // Audio Activity Hook for Local User
@@ -156,7 +159,8 @@ export function VideoGrid({
       })}
 
       {/* Bottom Controls Bar (Desktop Only) */}
-      <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 items-center gap-4 bg-black/40 backdrop-blur-3xl border border-white/10 px-6 py-3 rounded-[32px] shadow-2xl z-50 transition-all hover:bg-black/60 hover:scale-105">
+      {!isMinimized && (
+        <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 items-center gap-4 bg-black/40 backdrop-blur-3xl border border-white/10 px-6 py-3 rounded-[32px] shadow-2xl z-50 transition-all hover:bg-black/60 hover:scale-105">
         <button
           onClick={toggleMic}
           disabled={!canToggleMic}
@@ -199,6 +203,7 @@ export function VideoGrid({
           <Monitor className="w-5 h-5" />
         </button>
       </div>
+      )}
     </div>
   )
 }

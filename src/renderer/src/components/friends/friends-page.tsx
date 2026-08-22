@@ -70,7 +70,7 @@ export function FriendsPage() {
     : friends
 
   return (
-    <div className="relative space-y-0 pb-6">
+    <div className="relative space-y-0 p-6 pt-10 pb-6">
       {/* ─── Header Section (matches Stitch) ─── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

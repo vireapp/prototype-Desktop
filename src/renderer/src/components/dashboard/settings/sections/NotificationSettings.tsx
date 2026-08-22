@@ -122,7 +122,7 @@ export function NotificationSettings({
         <Button
           type="submit"
           disabled={isPending}
-          className="liquid-metal rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
+          className="bg-primary hover:bg-primary/90 rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
         >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isPending ? "Saving..." : "Save Preferences"}
@@ -131,3 +131,4 @@ export function NotificationSettings({
     </form>
   );
 }
+

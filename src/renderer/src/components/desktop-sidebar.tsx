@@ -50,64 +50,29 @@ function NavItem({
           draggable="false"
           onContextMenu={(e) => e.preventDefault()}
           className={cn(
-            'relative flex items-center justify-center w-11 h-11 mx-auto rounded-2xl transition-all duration-200 group',
+            'relative flex items-center justify-center w-11 h-11 mx-auto rounded-xl transition-all duration-200 group',
             isActive
-              ? 'text-primary'
-              : 'text-muted-foreground/50 hover:text-foreground/90'
+              ? 'text-foreground bg-zinc-800/80 shadow-sm border border-white/5'
+              : 'text-muted-foreground/60 hover:text-foreground/90 hover:bg-zinc-800/40'
           )}
         >
-          {/* Active solid background */}
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-bg"
-              className="absolute inset-0 rounded-xl bg-white/[0.08]"
-            />
-          )}
-
-          {/* Hover background */}
-          <div
-            className={cn(
-              'absolute inset-0 rounded-xl transition-opacity duration-150 opacity-0 group-hover:opacity-100 bg-white/[0.04]',
-              isActive ? 'opacity-0' : ''
-            )}
-          />
-
-          {/* Active left accent */}
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-indicator"
-              className="absolute rounded-r-full"
-              style={{
-                left: '-8px',
-                width: '3px',
-                height: '16px',
-                background: 'hsl(var(--primary))'
-              }}
-            />
-          )}
-
           <motion.div
-            whileTap={{ scale: 0.88 }}
+            whileTap={{ scale: 0.92 }}
             className="relative z-10 flex items-center justify-center"
           >
             {Icon && (
               <Icon
                 className={cn(
-                  'w-5 h-5 shrink-0 transition-all duration-300',
-                  isActive ? 'text-primary' : '',
-                  !isActive && label === 'Rooms' && 'group-hover:-rotate-12',
-                  !isActive && label === 'Home' && 'group-hover:-rotate-6',
-                  !isActive && label === 'Shop' && 'group-hover:scale-110',
-                  !isActive && label === 'Messages' && 'group-hover:-translate-y-0.5',
-                  !isActive && label === 'Friends' && 'group-hover:scale-110'
+                  'w-5 h-5 shrink-0 transition-all duration-200',
+                  isActive ? 'text-zinc-100' : ''
                 )}
-                strokeWidth={isActive ? 2.5 : 1.8}
+                strokeWidth={isActive ? 2 : 1.8}
               />
             )}
           </motion.div>
 
           {badge && badge > 0 && (
-            <span className="absolute top-1.5 right-1.5 flex w-2 h-2 rounded-full bg-primary border border-background" />
+            <span className="absolute top-1 right-1 flex w-2 h-2 rounded-full bg-blue-500 border-[1.5px] border-background shadow-sm" />
           )}
         </Link>
       </TooltipTrigger>
@@ -130,66 +95,37 @@ function AINavButton(): React.ReactElement {
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <motion.button
-          whileTap={{ scale: 0.88 }}
+          whileTap={{ scale: 0.92 }}
           onContextMenu={(e) => e.preventDefault()}
           onClick={() => {
             if (isOnAIPage) return
             togglePanel()
           }}
           className={cn(
-            'relative flex items-center justify-center w-11 h-11 mx-auto rounded-2xl transition-all duration-300 group',
+            'relative flex items-center justify-center w-11 h-11 mx-auto rounded-xl transition-all duration-200 group',
             isActive
-              ? 'text-violet-400'
-              : 'text-muted-foreground/50 hover:text-violet-400'
+              ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 shadow-sm'
+              : 'text-muted-foreground/60 hover:text-indigo-300 hover:bg-indigo-500/10'
           )}
         >
-          {/* Active background */}
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-bg"
-              className="absolute inset-0 rounded-xl bg-violet-500/10"
-            />
-          )}
-
-          {/* Hover background */}
-          {!isActive && (
-            <div
-              className="absolute inset-0 rounded-xl transition-opacity duration-150 opacity-0 group-hover:opacity-100 bg-violet-500/5"
-            />
-          )}
-
-          {/* Active left accent */}
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-indicator"
-              className="absolute rounded-r-full"
-              style={{
-                left: '-8px',
-                width: '3px',
-                height: '16px',
-                background: 'rgb(139,92,246)'
-              }}
-            />
-          )}
-
           <Sparkles
             className={cn(
-              'relative z-10 w-5 h-5 shrink-0 transition-all duration-300',
-              isActive && 'text-violet-400 drop-shadow-[0_0_6px_rgba(167,139,250,0.7)]',
-              status === 'thinking' && 'animate-pulse'
+              'relative z-10 w-5 h-5 shrink-0 transition-all duration-200',
+              isActive && 'text-indigo-400',
+              status === 'thinking' && 'animate-pulse opacity-80'
             )}
-            strokeWidth={isActive ? 2.5 : 1.8}
+            strokeWidth={isActive ? 2 : 1.8}
           />
 
           {/* Status dot */}
           <span
             className={cn(
-              'absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-background transition-colors',
+              'absolute top-1 right-1 w-2 h-2 rounded-full border-[1.5px] border-background transition-colors',
               status === 'error'
-                ? 'bg-red-500'
+                ? 'bg-red-400'
                 : status === 'thinking'
-                  ? 'bg-amber-400 animate-pulse'
-                  : 'bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                  ? 'bg-amber-400'
+                  : 'bg-emerald-400'
             )}
           />
         </motion.button>

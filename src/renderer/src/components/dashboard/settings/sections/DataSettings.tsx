@@ -60,7 +60,7 @@ export function DataSettings() {
             <Button
               variant="outline"
               onClick={handleExport}
-              className="liquid-metal rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
+              className="bg-primary hover:bg-primary/90 rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
             >
               Download JSON
             </Button>
@@ -87,3 +87,4 @@ export function DataSettings() {
     </div>
   );
 }
+

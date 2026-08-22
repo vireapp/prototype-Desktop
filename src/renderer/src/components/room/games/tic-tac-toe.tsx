@@ -86,6 +86,21 @@ export function TicTacToe({
 
           if (result.comment) {
             toast(result.comment, { icon: '🤖', duration: 4000 })
+            
+            // Broadcast AI comment to main chat so it acts like a real player
+            supabase.channel(`room_${roomId}_chat`).send({
+              type: 'broadcast',
+              event: 'chat_message',
+              payload: {
+                id: Math.random().toString(36).substring(7),
+                senderId: 'vire_ai',
+                senderName: 'VIRE AI',
+                senderAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=vire',
+                content: result.comment,
+                timestamp: Date.now(),
+                isSystem: false
+              }
+            })
           }
 
           const newBoard = [...gameState.board]

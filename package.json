@@ -1,7 +1,7 @@
 {
   "name": "vire-app",
   "productName": "VIRE",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vire Desktop App",
   "main": "./out/main/index.js",
   "author": "Vire",
@@ -21,13 +21,7 @@
     "build:mac": "electron-vite build && electron-builder --mac -p always",
     "build:linux": "electron-vite build && electron-builder --linux -p always"
   },
-  "build": {
-    "publish": {
-      "provider": "github",
-      "owner": "vireapp",
-      "repo": "prototype"
-    }
-  },
+  "build": {},
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
@@ -113,5 +107,11 @@
     "lottie-web": "^5.13.0",
     "react-useanimations": "^2.10.0",
     "styled-components": "^6.5.1"
+  },
+  "overrides": {
+    "electron-vite": {
+      "vite": "$vite"
+    },
+    "eslint": "$eslint"
   }
 }

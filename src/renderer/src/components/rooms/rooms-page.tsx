@@ -48,7 +48,7 @@ export function RoomsPage() {
 
       setUser(currentUser)
 
-      const [publicRes, myRes] = await Promise.all([
+      const [publicRes, createdRes, duoRoomsRes] = await Promise.all([
         supabase
           .from('rooms')
           .select('*')
@@ -59,11 +59,38 @@ export function RoomsPage() {
           .from('rooms')
           .select('*')
           .eq('created_by', currentUser.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('duo_rooms')
+          .select('room_id')
+          .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
       ])
 
+      let myRoomsData = createdRes.data || []
+
+      // If they have duo rooms they didn't create, fetch them
+      if (duoRoomsRes.data && duoRoomsRes.data.length > 0) {
+        const duoRoomIds = duoRoomsRes.data.map((dr) => dr.room_id)
+        // filter out ones we already fetched
+        const missingIds = duoRoomIds.filter(id => !myRoomsData.find(r => r.id === id))
+        
+        if (missingIds.length > 0) {
+          const { data: extraRooms } = await supabase
+            .from('rooms')
+            .select('*')
+            .in('id', missingIds)
+            
+          if (extraRooms) {
+            myRoomsData = [...myRoomsData, ...extraRooms]
+          }
+        }
+      }
+
+      // Sort combined rooms by created_at desc
+      myRoomsData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
       setPublicRooms(publicRes.data || [])
-      setMyRooms(myRes.data || [])
+      setMyRooms(myRoomsData)
       setIsLoading(false)
     }
 
@@ -93,7 +120,7 @@ export function RoomsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-8 p-6 pt-10 pb-8">
       {/* ─── Page Header ─── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

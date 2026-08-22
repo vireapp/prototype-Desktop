@@ -43,8 +43,8 @@ const STAGES: StageConfig[] = [
     key: 'chat_unlocked',
     label: 'Chat',
     icon: MessageSquare,
-    color: 'text-emerald-400',
-    glow: 'shadow-emerald-500/40',
+    color: 'text-emerald-500',
+    glow: 'bg-emerald-500/10 border-emerald-500/30',
     getProgress: () => ({ current: 1, max: 1 }),
     getHint: () => 'Chat is always available from the start'
   },
@@ -52,8 +52,8 @@ const STAGES: StageConfig[] = [
     key: 'voice_unlocked',
     label: 'Voice',
     icon: Mic,
-    color: 'text-blue-400',
-    glow: 'shadow-blue-500/40',
+    color: 'text-blue-500',
+    glow: 'bg-blue-500/10 border-blue-500/30',
     getProgress: (duo) => ({
       current: Math.min(duo.chat_message_count, duo.voice_unlock_at),
       max: duo.voice_unlock_at
@@ -67,8 +67,8 @@ const STAGES: StageConfig[] = [
     key: 'video_unlocked',
     label: 'Video',
     icon: Video,
-    color: 'text-violet-400',
-    glow: 'shadow-violet-500/40',
+    color: 'text-violet-500',
+    glow: 'bg-violet-500/10 border-violet-500/30',
     getProgress: (duo) => ({
       current: Math.min(duo.call_count, duo.video_unlock_at),
       max: duo.video_unlock_at
@@ -82,8 +82,8 @@ const STAGES: StageConfig[] = [
     key: 'extras_unlocked',
     label: 'Extras',
     icon: Gift,
-    color: 'text-rose-400',
-    glow: 'shadow-rose-500/40',
+    color: 'text-rose-500',
+    glow: 'bg-rose-500/10 border-rose-500/30',
     getProgress: (duo) => ({ current: duo.video_unlocked ? 1 : 0, max: 1 }),
     getHint: (duo, rt) =>
       duo.extras_unlocked
@@ -125,10 +125,10 @@ function StageItem({
         {/* Icon ring */}
         <div
           className={cn(
-            'w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-300',
+            'w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300',
             unlocked
-              ? `bg-gradient-to-br ${stage.color.replace('text-', 'from-').replace('-400', '-500/30')} to-transparent border-${stage.color.replace('text-', '').replace('-400', '-500/60')} shadow-lg ${stage.glow}`
-              : 'bg-muted/20 border-border/30'
+              ? stage.glow
+              : 'bg-muted/30 border-border/40'
           )}
         >
           {unlocked ? (

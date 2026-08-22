@@ -4,7 +4,7 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
-      onNavigate: (callback: (route: string) => void) => void
+      onNavigate: (callback: (route: string) => void) => () => void
       setProgress: (value: number) => void
       setBadgeCount: (count: number) => void
       minimize: () => void

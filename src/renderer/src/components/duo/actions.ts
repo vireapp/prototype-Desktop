@@ -38,6 +38,7 @@ export interface DuoRoom {
   video_unlock_at: number
   extras_unlock_at: number
   room_named: boolean
+  theme_url?: string
 }
 
 export interface DuoProfile {
@@ -413,78 +414,17 @@ export async function leaveDuoQueue(queueId: string): Promise<void> {
   await supabase.from('duo_queue').delete().eq('id', queueId)
 }
 
-// ─── Icebreaker Actions ───────────────────────────────────────────────────────
-
-export interface IcebreakerAnswers {
-  [question: string]: string
-}
-
 /**
- * Save icebreaker answers for the current user in a duo room.
+ * Leave/Delete a duo room to search for a new person.
  */
-export async function saveIcebreakerAnswers(
-  duoRoomId: string,
-  answers: IcebreakerAnswers
-): Promise<{ error?: string; success?: boolean }> {
+export async function leaveDuoRoom(roomId: string): Promise<{ error?: string }> {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-
-  const { error } = await supabase
-    .from('duo_icebreaker_answers')
-    .upsert({
-      duo_room_id: duoRoomId,
-      user_id: user.id,
-      answers,
-      completed_at: new Date().toISOString()
-    }, { onConflict: 'duo_room_id,user_id' })
-
+  const { error } = await supabase.from('rooms').delete().eq('id', roomId)
   if (error) return { error: error.message }
-  return { success: true }
+  return {}
 }
 
-/**
- * Get icebreaker answers for both users in a duo room.
- */
-export async function getIcebreakerAnswers(duoRoomId: string): Promise<{
-  mine?: IcebreakerAnswers
-  theirs?: IcebreakerAnswers
-  bothDone?: boolean
-}> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return {}
 
-  const { data } = await supabase
-    .from('duo_icebreaker_answers')
-    .select('user_id, answers')
-    .eq('duo_room_id', duoRoomId)
-
-  if (!data) return {}
-
-  const mine = data.find((r) => r.user_id === user.id)?.answers as IcebreakerAnswers | undefined
-  const theirs = data.find((r) => r.user_id !== user.id)?.answers as IcebreakerAnswers | undefined
-
-  return { mine, theirs, bothDone: !!mine && !!theirs }
-}
-
-/**
- * Check if the current user has completed icebreaker.
- */
-export async function hasCompletedIcebreaker(duoRoomId: string): Promise<boolean> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
-
-  const { data } = await supabase
-    .from('duo_icebreaker_answers')
-    .select('id')
-    .eq('duo_room_id', duoRoomId)
-    .eq('user_id', user.id)
-    .single()
-
-  return !!data
-}
 
 /**
  * Get shared interests between two queue entries for AI naming.
@@ -538,4 +478,27 @@ export async function checkExtrasUnlock(roomId: string): Promise<boolean> {
 
   return false
 }
+
+/**
+ * Update Duo Room settings (milestones and theme).
+ */
+export async function updateDuoRoomSettings(
+  roomId: string,
+  settings: {
+    voice_unlock_at?: number
+    video_unlock_at?: number
+    extras_unlock_at?: number
+    theme_url?: string | null
+  }
+): Promise<{ error?: string }> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('duo_rooms')
+    .update(settings)
+    .eq('room_id', roomId)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
 

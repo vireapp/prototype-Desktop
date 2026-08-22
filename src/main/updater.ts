@@ -5,8 +5,14 @@ import log from 'electron-log'
 autoUpdater.logger = log
 autoUpdater.autoDownload = false // Don't download automatically, give user control
 autoUpdater.autoInstallOnAppQuit = false // Never install silently — require explicit user action
+autoUpdater.forceDevUpdateConfig = true // Force update check in development mode
+autoUpdater.allowPrerelease = true // Allow fetching beta/pre-releases
+let isUpdaterInitialized = false
 
 export function initAutoUpdater(mainWindow: BrowserWindow): void {
+  if (isUpdaterInitialized) return
+  isUpdaterInitialized = true
+
   // Check for updates 5 seconds after startup
   setTimeout(() => {
     autoUpdater.checkForUpdates()
@@ -21,6 +27,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
   )
 
   // --- Events ---
+  autoUpdater.removeAllListeners()
 
   autoUpdater.on('checking-for-update', () => {
     log.info('Checking for updates...')
@@ -74,6 +81,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
 
   // --- IPC Handlers from Renderer ---
 
+  ipcMain.removeHandler('check-for-updates')
   ipcMain.handle('check-for-updates', async () => {
     try {
       const result = await autoUpdater.checkForUpdates()
@@ -84,6 +92,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
     }
   })
 
+  ipcMain.removeHandler('download-update')
   ipcMain.handle('download-update', async () => {
     try {
       await autoUpdater.downloadUpdate()
@@ -94,6 +103,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
     }
   })
 
+  ipcMain.removeAllListeners('install-update')
   ipcMain.on('install-update', () => {
     autoUpdater.quitAndInstall(false, true)
   })

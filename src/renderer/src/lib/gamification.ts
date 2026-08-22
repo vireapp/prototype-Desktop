@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { enqueueWrite } from '@/lib/write-queue'
 import { getCached, setCached, invalidateCache } from '@/lib/query-cache'
+import { useInventoryStore } from '@/stores/use-inventory'
 
 const DAILY_LOGIN_XP = 50
 const PRESENCE_TICK_XP = 10 // XP per tick (approx 5-10 mins)
@@ -45,9 +46,9 @@ export async function getUserGamificationData() {
   if (cached) return cached
   // ────────────────────────────────────────────────────────────────────────
 
-  const [profileResult, achievementsResult, activeFriendsResult, activeRoomsResult] =
+  const [profileResult, achievementsResult, activeFriendsResult, activeRoomsResult, questsResult] =
     await Promise.all([
-      supabase.from('profiles').select('xp, level').eq('id', user.id).single(),
+      supabase.from('profiles').select('xp, level, streak_count, streak_saves, coins').eq('id', user.id).single(),
       supabase
         .from('user_achievements')
         .select('*, achievement:achievements(*)')
@@ -56,10 +57,17 @@ export async function getUserGamificationData() {
         .from('friends')
         .select('id, friend:profiles!friend_id!inner(status)', { count: 'exact', head: true })
         .or('status.eq.online,status.eq.in-room', { foreignTable: 'friend' }),
-      supabase.from('rooms').select('id', { count: 'exact', head: true })
+      supabase.from('rooms').select('id', { count: 'exact', head: true }),
+      supabase.from('user_quests')
+        .select('*, quest:daily_quests(*)')
+        .eq('user_id', user.id)
+        .eq('assigned_date', new Date().toISOString().split('T')[0])
     ])
 
   const currentXP = profileResult.data?.xp || 0
+  const streakCount = profileResult.data?.streak_count || 0
+  const streakSaves = profileResult.data?.streak_saves || 0
+  
   const { level, xpToNextLevel, currentLevelXP, progress } =
     calculateLevelAndProgress(currentXP)
 
@@ -79,7 +87,10 @@ export async function getUserGamificationData() {
     level,
     accumulatedTarget,
     progress,
+    streakCount,
+    streakSaves,
     achievements: achievementsResult.data || [],
+    quests: questsResult.data || [],
     activeFriends: activeFriendsResult.count || 0,
     activeRooms: activeRoomsResult.count || 0
   })
@@ -97,8 +108,12 @@ function _buildGamificationResult(params: {
   level: number
   accumulatedTarget: number
   progress: number
+  streakCount: number
+  streakSaves: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   achievements: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  quests: any[]
   activeFriends: number
   activeRooms: number
 }) {
@@ -107,7 +122,10 @@ function _buildGamificationResult(params: {
     level: params.level,
     nextLevelXP: params.accumulatedTarget,
     progress: Math.min(Math.max(params.progress, 0), 100),
+    streakCount: params.streakCount,
+    streakSaves: params.streakSaves,
     achievements: params.achievements,
+    quests: params.quests,
     activeFriends: params.activeFriends,
     activeRooms: params.activeRooms
   }
@@ -125,7 +143,7 @@ export async function logActivity() {
   const today = new Date().toISOString().split('T')[0]
   const userId = user.id
 
-  // 1. Check for Daily Login Bonus
+  // 1. Check for Daily Login Bonus via RPC (handles streaks & saves)
   const { data: existingLogin } = await supabase
     .from('activity_logs')
     .select('id')
@@ -134,16 +152,22 @@ export async function logActivity() {
     .gte('created_at', `${today}T00:00:00Z`)
 
   if (!existingLogin || existingLogin.length === 0) {
-    // ── Layer 1: Enqueue XP award (atomic RPC) + activity log ───────────
-    await _awardXP(userId, DAILY_LOGIN_XP)
-    enqueueWrite({
-      table: 'activity_logs',
-      op: 'insert',
-      payload: { user_id: userId, activity_type: 'daily_login' }
-    })
-    // Bust the gamification cache so next read reflects new XP
-    invalidateCache(`gamification_${userId}`)
-    // ────────────────────────────────────────────────────────────────────
+    const { data: loginResult, error: rpcError } = await supabase.rpc('process_daily_login')
+    
+    if (!rpcError && loginResult?.success) {
+      // Sync awarded coins to Zustand store
+      if (loginResult.coins_awarded) {
+        useInventoryStore.getState().addCoins(loginResult.coins_awarded)
+      }
+      
+      enqueueWrite({
+        table: 'activity_logs',
+        op: 'insert',
+        payload: { user_id: userId, activity_type: 'daily_login' }
+      })
+      // Bust the gamification cache so next read reflects new XP
+      invalidateCache(`gamification_${userId}`)
+    }
   }
 
   // 2. Log Presence Tick (approx every 5-10 mins)
@@ -203,7 +227,7 @@ async function _awardAchievement(userId: string, achievementName: string) {
 
   const { data: achievement } = await supabase
     .from('achievements')
-    .select('id, xp_reward')
+    .select('id, xp_reward, coin_reward')
     .eq('name', achievementName)
     .single()
 
@@ -221,15 +245,14 @@ async function _awardAchievement(userId: string, achievementName: string) {
 
   // Award XP atomically
   await _awardXP(userId, achievement.xp_reward)
+  if (achievement.coin_reward) {
+    useInventoryStore.getState().addCoins(achievement.coin_reward)
+  }
   invalidateCache(`gamification_${userId}`)
 }
 
 /**
  * Awards XP atomically via a Postgres RPC.
- * This replaces the old read-then-write pattern that caused race conditions.
- *
- * The `award_xp` function is defined in:
- *   src/renderer/src/lib/supabase/migrations/001_award_xp_rpc.sql
  */
 async function _awardXP(userId: string, amount: number) {
   const supabase = createClient()
@@ -239,8 +262,6 @@ async function _awardXP(userId: string, amount: number) {
   })
 
   if (error) {
-    // RPC failed — fall back to enqueueing a raw upsert as a safety net.
-    // This won't be atomic but is better than silently losing XP.
     console.warn('[Gamification] award_xp RPC failed, falling back to queued write:', error)
     enqueueWrite({
       table: 'profiles',
@@ -249,4 +270,81 @@ async function _awardXP(userId: string, amount: number) {
       filter: { column: 'id', value: userId }
     })
   }
+}
+
+// ── NEW FEATURES (Quests, Mystery Boxes, Kudos) ──────────────────────────
+
+export async function completeQuest(questId: string, userId: string) {
+  const supabase = createClient()
+  const today = new Date().toISOString().split('T')[0]
+
+  // Check if quest is already completed
+  const { data: uq } = await supabase
+    .from('user_quests')
+    .select('completed, quest:daily_quests(xp_reward, coin_reward)')
+    .eq('user_id', userId)
+    .eq('quest_id', questId)
+    .eq('assigned_date', today)
+    .single()
+
+  if (!uq || uq.completed) return
+
+  // Mark as completed
+  await supabase
+    .from('user_quests')
+    .update({ completed: true, progress: 1 })
+    .eq('user_id', userId)
+    .eq('quest_id', questId)
+    .eq('assigned_date', today)
+
+  if (uq.quest) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const quest = uq.quest as any
+    await _awardXP(userId, quest.xp_reward)
+    useInventoryStore.getState().addCoins(quest.coin_reward)
+  }
+  
+  invalidateCache(`gamification_${userId}`)
+  
+  // Check if all 5 are completed to award Mystery Box
+  const { count } = await supabase
+    .from('user_quests')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('assigned_date', today)
+    .eq('completed', true)
+    
+  if (count === 5) {
+     awardMysteryBox(userId)
+  }
+}
+
+export async function awardMysteryBox(userId: string) {
+  // Grant a random reward
+  const random = Math.random()
+  if (random < 0.6) {
+    // 60% chance: Coins
+    useInventoryStore.getState().addCoins(250)
+  } else if (random < 0.95) {
+    // 35% chance: Big XP
+    await _awardXP(userId, 1000)
+  } else {
+    // 5% chance: Ultra rare shop item or huge coin drop
+    useInventoryStore.getState().addCoins(1000)
+  }
+  invalidateCache(`gamification_${userId}`)
+}
+
+export async function sendKudos(toUserId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  
+  // Grant XP to receiver
+  await _awardXP(toUserId, 25)
+  // Grant small XP to sender for being nice
+  await _awardXP(user.id, 10)
+  
+  invalidateCache(`gamification_${user.id}`)
+  invalidateCache(`gamification_${toUserId}`)
 }

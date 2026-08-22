@@ -57,7 +57,7 @@ export function AuthLayout({ children, subtitle = "Welcome back" }: AuthLayoutPr
           <Link to="/" className="inline-flex items-center gap-3">
             <div className="relative w-8 h-8">
               <img
-                src="/images/vire_logo.png"
+                src="./images/vire_logo.png"
                 alt="Vire Logo"
                 className="absolute inset-0 w-full h-full object-contain dark:invert"
               />
@@ -158,7 +158,7 @@ export function AuthLayout({ children, subtitle = "Welcome back" }: AuthLayoutPr
             <div className="flex items-center gap-3 mb-12 lg:hidden">
               <div className="relative h-8 w-8">
                 <img
-                  src="/images/vire_logo.png"
+                  src="./images/vire_logo.png"
                   alt="Vire Logo"
                   className="absolute inset-0 w-full h-full object-contain dark:invert"
                 />

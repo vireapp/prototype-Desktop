@@ -55,7 +55,7 @@ export const useSystemSettings = create<SystemSettingsState>()(
 
         // Apply accessibility settings immediately
         if (key === 'textScale') {
-          document.documentElement.style.fontSize = `${(value / 100) * 16}px`
+          document.documentElement.style.setProperty('--text-scale', String(value / 100))
         }
       },
 
@@ -85,7 +85,7 @@ export const useSystemSettings = create<SystemSettingsState>()(
             })
             
             // Apply text scale on load
-            document.documentElement.style.fontSize = `${(get().textScale / 100) * 16}px`
+            document.documentElement.style.setProperty('--text-scale', String(get().textScale / 100))
           } catch (e) {
             console.error('Failed to sync system settings:', e)
           }

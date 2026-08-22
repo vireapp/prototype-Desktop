@@ -4,6 +4,8 @@ import { produce } from 'immer'
 import { submitChat, getChatHistory, clearChatHistory } from '@/lib/ai/actions'
 import { useAI } from '@/lib/ai-context'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
+import { processAiCommands } from '@/lib/ai/command-handler'
 
 export type Message = {
   role: 'user' | 'model'
@@ -18,6 +20,7 @@ export function useAIChat() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const scrollEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const loadHistory = async (): Promise<void> => {
@@ -39,22 +42,23 @@ export function useAIChat() {
     }
   }, [messages])
 
-  const handleSend = async (): Promise<void> => {
-    if (!input.trim() || isLoading) return
+  const handleSend = async (overrideInput?: string): Promise<void> => {
+    const textToSend = overrideInput || input
+    if (!textToSend.trim() || isLoading) return
 
     setStatus('thinking')
-    const userMessage: Message = { role: 'user', content: [{ text: input }] }
+    const userMessage: Message = { role: 'user', content: [{ text: textToSend }] }
     setMessages(
       produce((draft) => {
         draft.push(userMessage)
       })
     )
-    setInput('')
+    if (!overrideInput) setInput('')
     setIsLoading(true)
 
     try {
       const history = messages.slice(-10)
-      const result = await submitChat(input, history)
+      const result = await submitChat(textToSend, history)
 
       if (result.error) {
         setStatus('error')
@@ -73,6 +77,9 @@ export function useAIChat() {
             draft.push(aiMessage)
           })
         )
+        
+        // Execute any internal AI commands (e.g. creating rooms, navigating)
+        await processAiCommands(result.response, navigate)
       }
     } catch {
       setStatus('error')

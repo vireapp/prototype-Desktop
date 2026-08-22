@@ -12,20 +12,15 @@ export function TitleBar(): React.JSX.Element {
 
   useEffect(() => {
     const checkDevStatus = async () => {
-      if (import.meta.env.DEV) {
-        setIsDev(true)
-        return
-      }
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-          if (profile?.role === 'developer') setIsDev(true)
+        
+        // Check if user is the specific developer or if in dev environment
+        if (user?.email === 'billu@yopmail.com' || import.meta.env.DEV) {
+          setIsDev(true)
+        } else {
+          setIsDev(false)
         }
       } catch (err) {
         console.error('TitleBar: Error checking dev status:', err)
@@ -54,14 +49,15 @@ export function TitleBar(): React.JSX.Element {
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent pointer-events-none" />
 
       {/* Left: Brand + Drag Region */}
-      <div className="flex-1 h-full flex items-center px-4 drag-region">
-        <div className="no-drag flex items-center gap-2.5">
-          {/* App Logo */}
-          <div className="relative shrink-0 flex items-center justify-center">
-            <img src="/images/vire_logo.png" alt="VIRE Logo" className="w-[18px] h-[18px] object-contain" />
+      <div className="flex-1 h-full flex items-center drag-region">
+        <div className="flex items-center h-full">
+          {/* App Logo - width matches the primary sidebar (68px) and centers the logo */}
+          <div className="w-[68px] h-full flex items-center justify-center no-drag">
+            <img src="./images/vire_logo.png" alt="VIRE Logo" className="w-[18px] h-[18px] object-contain" />
           </div>
 
-          <div className="flex items-baseline gap-1.5">
+          {/* VIRE text - placed to the right of the sidebar border line */}
+          <div className="no-drag flex items-baseline gap-1.5 pl-3">
             <span
               className="text-[11.5px] font-bold tracking-[0.18em] text-foreground/90 uppercase leading-none"
               style={{ fontFamily: 'var(--font-heading)' }}

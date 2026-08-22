@@ -24,6 +24,9 @@ let isQuitting = false
 // Ensure app name is correct
 app.setName('VIRE')
 
+// Strip "Electron" from User-Agent to bypass Cloudflare Turnstile in webviews
+app.userAgentFallback = app.userAgentFallback.replace(/Electron\/\S+\s/, '')
+
 // Set protocol for deep linking
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -302,7 +305,8 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       webSecurity: true,
-      contextIsolation: true
+      contextIsolation: true,
+      webviewTag: true
     }
   })
 
@@ -445,16 +449,15 @@ function createWindow(): void {
 
   // --- Secure AI & YouTube IPC Handlers ---
   const ALLOWED_AI_MODELS = [
-    'llama-3.1-8b-instant',
-    'llama-3.3-70b-versatile',
-    'llama3-8b-8192',
-    'llama3-70b-8192',
-    'mixtral-8x7b-32768',
-    'gemma2-9b-it'
+    'qwen/qwen3.6-27b',
+    'groq/compound-mini',
+    'groq/compound',
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
   ]
   const MAX_AI_MESSAGES = 50
   const MAX_AI_CHARS = 100_000
-  const MAX_AI_TOKENS = 2000
+  const MAX_AI_TOKENS = 4000
 
   ipcMain.handle('ai-chat', async (_event, messages: any[], options: any = {}) => {
     try {
@@ -467,13 +470,13 @@ function createWindow(): void {
       // Validate / sanitize options
       const model = ALLOWED_AI_MODELS.includes(options?.model)
         ? options.model
-        : 'llama-3.1-8b-instant'
+        : 'qwen/qwen3.6-27b'
       const temperature = typeof options?.temperature === 'number'
         ? Math.min(Math.max(options.temperature, 0), 2)
         : 0.7
       const max_tokens = typeof options?.max_tokens === 'number'
         ? Math.min(Math.max(Math.floor(options.max_tokens), 1), MAX_AI_TOKENS)
-        : 500
+        : 2000
 
       const apiKey = process.env.GROQ_API_KEY || 
                      process.env.VITE_GROQ_API_KEY || 
@@ -488,7 +491,10 @@ function createWindow(): void {
         temperature,
         max_tokens
       })
-      return { response: completion.choices[0]?.message?.content || '' }
+      let content = completion.choices[0]?.message?.content || ''
+      // Remove <think> blocks (including unclosed ones)
+      content = content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim()
+      return { response: content }
     } catch (error: any) {
       console.error('[IPC:ai-chat] Error:', error)
       return { error: error.message || 'AI Service Error' }

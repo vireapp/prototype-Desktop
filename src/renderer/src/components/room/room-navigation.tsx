@@ -1,9 +1,8 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Tv,
   LayoutGrid,
   PenTool,
   Music2,
@@ -12,35 +11,38 @@ import {
   Users,
   Bot,
   Monitor,
-  Home
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+  Home,
+  FileText,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type ActivityType =
-  | 'media'
-  | 'screen_share'
-  | 'whiteboard'
-  | 'games'
-  | 'notes'
-  | 'timer'
-  | 'tasks'
-  | 'music'
-  | 'virtual_tv'
-  | 'home'
-  | 'conference'
+  | "media"
+  | "screen_share"
+  | "whiteboard"
+  | "games"
+  | "notes"
+  | "timer"
+  | "tasks"
+  | "music"
+  | "virtual_tv"
+  | "home"
+  | "conference";
 
-export type SidebarType = 'chat' | 'participants' | 'ai' | 'none'
+export type SidebarType = "chat" | "participants" | "ai" | "none";
 
 interface RoomNavigationProps {
-  currentActivity: ActivityType
-  onActivityChange: (activity: ActivityType) => void
-  activeSidebar: SidebarType
-  onSidebarChange: (sidebar: SidebarType) => void
-  isSidebarOpen: boolean
-  onToggleSidebar: () => void
-  activityCounts?: Record<string, number>
-  isRoomPublic?: boolean
+  currentActivity: ActivityType;
+  onActivityChange: (activity: ActivityType) => void;
+  activeSidebar: SidebarType;
+  onSidebarChange: (sidebar: SidebarType) => void;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  activityCounts?: Record<string, number>;
+  isRoomPublic?: boolean;
+  isLightTheme?: boolean;
+  hasUnreadPolls?: boolean;
 }
 
 export function RoomNavigation({
@@ -51,234 +53,182 @@ export function RoomNavigation({
   isSidebarOpen,
   onToggleSidebar,
   activityCounts = {},
-  isRoomPublic = false
+  isRoomPublic = false,
+  isLightTheme = false,
+  hasUnreadPolls = false,
 }: RoomNavigationProps) {
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
-  const mainApps = [
-    {
-      id: 'media',
-      label: 'Watch',
-      icon: Monitor,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'virtual_tv',
-      label: 'TV',
-      icon: Tv,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'whiteboard',
-      label: 'Canvas',
-      icon: PenTool,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'notes',
-      label: 'Notes',
-      icon: 'NotesIcon',
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'games',
-      label: 'Games',
-      icon: LayoutGrid,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    }
-  ].filter((app) => !(app.id === 'virtual_tv' && isRoomPublic))
+  const mainApps: NavItemDef[] = [
+    { id: "media", label: "Watch", icon: Monitor, accentColor: "59, 130, 246" },
+    // { id: "virtual_tv", label: "TV", icon: Tv, accentColor: "99, 102, 241" },
+    { id: "whiteboard", label: "Canvas", icon: PenTool, accentColor: "245, 158, 11" },
+    { id: "notes", label: "Notes", icon: FileText, accentColor: "20, 184, 166" },
+    { id: "games", label: "Games", icon: LayoutGrid, accentColor: "168, 85, 247" },
+  ];
 
-  const utilityApps = [
-    {
-      id: 'tasks',
-      label: 'Tasks',
-      icon: ListTodo,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'music',
-      label: 'Music',
-      icon: Music2,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    }
-  ]
+  const utilityApps: NavItemDef[] = [
+    { id: "tasks", label: "Tasks", icon: ListTodo, accentColor: "16, 185, 129" },
+    { id: "music", label: "Music", icon: Music2, accentColor: "236, 72, 153" },
+  ];
 
-  const sidebarTools = [
-    {
-      id: 'chat',
-      label: 'Chat',
-      icon: MessageSquare,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'participants',
-      label: 'People',
-      icon: Users,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    },
-    {
-      id: 'ai',
-      label: 'AI',
-      icon: Bot,
-      gradient: 'from-white/10 to-transparent',
-      glowColor: '255, 255, 255'
-    }
-  ]
+  const sidebarTools: NavItemDef[] = [
+    { id: "chat", label: "Chat", icon: MessageSquare, accentColor: "99, 102, 241" },
+    { id: "participants", label: "People", icon: Users, accentColor: "249, 115, 22" },
+    { id: "ai", label: "AI", icon: Bot, accentColor: "244, 63, 94" },
+  ];
 
   const handleSidebarClick = (id: string) => {
-    // Special refactor: "participants" is now a floating overlay, not a sidebar
-    if (id === 'participants') {
-      onSidebarChange(id as SidebarType)
-      return
+    if (id === "participants") {
+      onSidebarChange(id as SidebarType);
+      return;
     }
-
     if (activeSidebar === id && isSidebarOpen) {
-      onToggleSidebar()
+      onToggleSidebar();
     } else {
-      if (!isSidebarOpen) onToggleSidebar()
-      onSidebarChange(id as SidebarType)
+      if (!isSidebarOpen) onToggleSidebar();
+      onSidebarChange(id as SidebarType);
     }
-  }
+  };
 
-  const allApps = [{ id: 'home', glowColor: '255, 255, 255' }, ...mainApps, ...utilityApps]
-
-  const activeApp = allApps.find((app) => app.id === currentActivity)
-  const activeGlowColor = activeApp ? activeApp.glowColor : '255, 255, 255'
+  const pillBg =
+    "bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]";
 
   return (
     <motion.div
-      className="relative flex items-center gap-2 p-2 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl"
-      initial={{ y: -20, opacity: 0 }}
-      animate={{
-        y: 0,
-        opacity: 1,
-        boxShadow: `0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
-      }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className={cn(
+        "relative flex items-center gap-1 px-2 py-1.5 border rounded-2xl backdrop-blur-2xl",
+        pillBg,
+      )}
+      initial={{ y: -16, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 380, damping: 32, delay: 0.1 }}
     >
-      {/* Delicate Inner border */}
-      <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none mix-blend-overlay" />
+      {/* Home button */}
+      <NavItem
+        id="home"
+        label="Home"
+        icon={Home}
+        active={currentActivity === "home"}
+        hovered={hoveredItem === "home"}
+        count={activityCounts?.["home"]}
+        accentColor="255, 255, 255"
+        isLightTheme={isLightTheme}
+        onClick={() => onActivityChange("home")}
+        onHover={(h) => setHoveredItem(h ? "home" : null)}
+      />
 
-      {/* Main Apps Group */}
-      <div className="flex items-center gap-1 px-1">
-        {/* Home Button */}
-        <NavButton
-          id="home"
-          active={currentActivity === 'home'}
-          onClick={() => onActivityChange('home')}
-          icon={Home}
-          label="Home"
-          gradient="from-foreground/10 to-foreground/5"
-          glowColor="120, 120, 120"
-          count={activityCounts?.['home']}
-          isHovered={hoveredItem === 'home'}
-          onHover={(hovered) => setHoveredItem(hovered ? 'home' : null)}
+      {/* Divider */}
+      <div
+        className={cn("w-px h-5 mx-0.5", isLightTheme ? "bg-black/[0.08]" : "bg-white/[0.07]")}
+      />
+
+      {/* Main apps */}
+      {mainApps.map((app) => (
+        <NavItem
+          key={app.id}
+          id={app.id}
+          label={app.label}
+          icon={app.icon}
+          active={currentActivity === app.id}
+          hovered={hoveredItem === app.id}
+          count={activityCounts[app.id]}
+          accentColor={app.accentColor}
+          isLightTheme={isLightTheme}
+          onClick={() => onActivityChange(app.id as ActivityType)}
+          onHover={(h) => setHoveredItem(h ? app.id : null)}
         />
-
-        {/* Divider */}
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {mainApps.map((app) => (
-          <NavButton
-            key={app.id}
-            id={app.id}
-            active={currentActivity === app.id}
-            onClick={() => onActivityChange(app.id as ActivityType)}
-            icon={app.icon}
-            label={app.label}
-            gradient={app.gradient}
-            glowColor={app.glowColor}
-            count={activityCounts[app.id]}
-            isHovered={hoveredItem === app.id}
-            onHover={(hovered) => setHoveredItem(hovered ? app.id : null)}
-          />
-        ))}
-      </div>
+      ))}
 
       {/* Divider */}
-      <div className="w-px h-8 bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+      <div
+        className={cn("w-px h-5 mx-0.5", isLightTheme ? "bg-black/[0.08]" : "bg-white/[0.07]")}
+      />
 
-      {/* Utility Apps Group */}
-      <div className="flex items-center gap-1 px-1">
-        {utilityApps.map((app) => (
-          <NavButton
-            key={app.id}
-            id={app.id}
-            active={currentActivity === app.id}
-            onClick={() => onActivityChange(app.id as ActivityType)}
-            icon={app.icon}
-            label={app.label}
-            gradient={app.gradient}
-            glowColor={app.glowColor}
-            count={activityCounts[app.id]}
-            isHovered={hoveredItem === app.id}
-            onHover={(hovered) => setHoveredItem(hovered ? app.id : null)}
-          />
-        ))}
-      </div>
+      {/* Utility apps */}
+      {utilityApps.map((app) => (
+        <NavItem
+          key={app.id}
+          id={app.id}
+          label={app.label}
+          icon={app.icon}
+          active={currentActivity === app.id}
+          hovered={hoveredItem === app.id}
+          count={activityCounts[app.id]}
+          accentColor={app.accentColor}
+          isLightTheme={isLightTheme}
+          onClick={() => onActivityChange(app.id as ActivityType)}
+          onHover={(h) => setHoveredItem(h ? app.id : null)}
+        />
+      ))}
 
       {/* Divider */}
-      <div className="w-px h-8 bg-white/10" />
+      <div
+        className={cn("w-px h-5 mx-0.5", isLightTheme ? "bg-black/[0.08]" : "bg-white/[0.07]")}
+      />
 
-      {/* Sidebar Tools Group */}
-      <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1.5 border border-white/5">
+      {/* Sidebar tools */}
+      <div
+        className={cn(
+          "flex items-center gap-0.5 px-1 py-0.5 rounded-xl",
+          isLightTheme ? "bg-black/[0.04]" : "bg-white/[0.04]",
+        )}
+      >
         {sidebarTools.map((tool) => (
-          <SidebarButton
+          <SidebarNavItem
             key={tool.id}
             id={tool.id}
-            active={isSidebarOpen && activeSidebar === tool.id}
-            onClick={() => handleSidebarClick(tool.id)}
-            icon={tool.icon}
             label={tool.label}
-            gradient={tool.gradient}
-            glowColor={tool.glowColor}
-            isHovered={hoveredItem === `sidebar-${tool.id}`}
-            onHover={(hovered) => setHoveredItem(hovered ? `sidebar-${tool.id}` : null)}
+            icon={tool.icon}
+            active={isSidebarOpen && activeSidebar === tool.id}
+            hovered={hoveredItem === `sb-${tool.id}`}
+            accentColor={tool.accentColor}
+            isLightTheme={isLightTheme}
+            onClick={() => handleSidebarClick(tool.id)}
+            onHover={(h) => setHoveredItem(h ? `sb-${tool.id}` : null)}
           />
         ))}
       </div>
     </motion.div>
-  )
+  );
 }
 
-interface NavButtonProps {
-  id: string
-  active: boolean
-  onClick: () => void
+interface NavItemDef {
+  id: string;
+  label: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any
-  label: string
-  gradient: string
-  glowColor: string
-  count?: number
-  isHovered: boolean
-  onHover: (hovered: boolean) => void
+  icon: any;
+  accentColor: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function NavButton({
+interface NavItemProps extends NavItemDef {
+  active: boolean;
+  hovered: boolean;
+  count?: number;
+  isLightTheme: boolean;
+  onClick: () => void;
+  onHover: (h: boolean) => void;
+}
+
+function NavItem({
   id,
-  active,
-  onClick,
-  icon: Icon,
   label,
-  gradient,
-  glowColor,
+  icon: Icon,
+  active,
+  hovered,
   count,
-  isHovered,
-  onHover
-}: NavButtonProps) {
+  accentColor,
+  isLightTheme,
+  onClick,
+  onHover,
+}: NavItemProps) {
+  const activeTextColor = isLightTheme ? "text-zinc-900" : "text-white";
+  const inactiveTextColor = isLightTheme
+    ? "text-zinc-500 hover:text-zinc-800"
+    : "text-white/40 hover:text-white/80";
+
   return (
-    <TooltipProvider delayDuration={0}>
+    <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.button
@@ -287,120 +237,119 @@ function NavButton({
             onMouseEnter={() => onHover(true)}
             onMouseLeave={() => onHover(false)}
             className={cn(
-              'relative flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-300 focus:outline-none',
-              active ? 'text-white' : 'text-white/60 hover:text-white/90'
+              "relative flex flex-col items-center justify-center w-10 h-9 rounded-xl transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
+              active ? activeTextColor : inactiveTextColor,
             )}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.92 }}
           >
+            {/* Active background glow */}
             <AnimatePresence>
               {active && (
                 <motion.div
-                  className={cn('absolute inset-0 rounded-xl bg-white/15 backdrop-blur-md border border-white/20')}
-                  layoutId="nav-active-bg"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className="absolute inset-0 rounded-xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   style={{
-                    boxShadow: `0 4px 12px rgba(0,0,0, 0.2)`
+                    background: isLightTheme
+                      ? `rgba(${accentColor}, 0.1)`
+                      : `rgba(${accentColor}, 0.15)`,
                   }}
                 />
               )}
             </AnimatePresence>
 
-            {/* Hover glow */}
-            <motion.div
-              className="absolute inset-0 rounded-xl"
-              animate={{
-                backgroundColor: isHovered && !active ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0)'
-              }}
-              transition={{ duration: 0.2 }}
-            />
-
-            {/* Presence Badge */}
-            {count && count > 0 && !active && (
+            {/* Hover background */}
+            {!active && (
               <motion.div
-                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center z-10"
+                className="absolute inset-0 rounded-xl"
+                animate={{
+                  opacity: hovered ? 1 : 0,
+                  background: isLightTheme ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)",
+                }}
+                transition={{ duration: 0.12 }}
+              />
+            )}
+
+            {/* Presence count badge */}
+            {count !== undefined && count > 0 && !active && (
+              <motion.span
+                className={cn(
+                  "absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full",
+                  isLightTheme ? "bg-zinc-400" : "bg-white/30",
+                )}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 500 }}
-              >
-                <span className="text-[9px] font-bold text-white">{count}</span>
-              </motion.div>
+                transition={{ type: "spring", stiffness: 500 }}
+              />
             )}
 
             {/* Icon */}
-            <motion.div
-              className="relative z-10"
-              animate={{
-                rotate: active ? [0, -5, 5, 0] : 0
-              }}
-              transition={{ duration: 0.4, delay: active ? 0.1 : 0 }}
-            >
-              {Icon === 'NotesIcon' ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <path d="M12 13v6" />
-                  <path d="M9 16h6" />
-                </svg>
-              ) : (
-                <Icon className="w-5 h-5" />
+            <div className="relative z-10">
+              <Icon className="w-[18px] h-[18px]" strokeWidth={active ? 2 : 1.5} />
+            </div>
+
+            {/* Active underline indicator */}
+            <AnimatePresence>
+              {active && (
+                <motion.div
+                  layoutId={`nav-indicator-${id}`}
+                  className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-[2px] rounded-full"
+                  style={{
+                    width: "16px",
+                    background: `rgba(${accentColor}, 0.9)`,
+                    boxShadow: `0 0 6px rgba(${accentColor}, 0.5)`,
+                  }}
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  exit={{ opacity: 0, scaleX: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
               )}
-            </motion.div>
+            </AnimatePresence>
           </motion.button>
         </TooltipTrigger>
-        <TooltipContent
-          side="bottom"
-          className="bg-popover text-popover-foreground border-border text-xs font-medium px-3 py-1.5 flex gap-2 items-center rounded-lg shadow-xl"
-        >
+        <TooltipContent side="bottom" className="text-xs font-medium px-2.5 py-1.5 rounded-lg">
           {label}
-          {count && count > 0 && <span className="text-zinc-400">({count})</span>}
+          {count !== undefined && count > 0 && <span className="ml-1.5 opacity-50">{count}</span>}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }
 
-interface SidebarButtonProps {
-  id: string
-  active: boolean
-  onClick: () => void
+interface SidebarNavItemProps {
+  id: string;
+  label: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any
-  label: string
-  gradient: string
-  glowColor: string
-  isHovered: boolean
-  onHover: (hovered: boolean) => void
+  icon: any;
+  active: boolean;
+  hovered: boolean;
+  accentColor: string;
+  isLightTheme: boolean;
+  onClick: () => void;
+  onHover: (h: boolean) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function SidebarButton({
+function SidebarNavItem({
   id,
-  active,
-  onClick,
-  icon: Icon,
   label,
-  gradient,
-  glowColor,
-  isHovered,
-  onHover
-}: SidebarButtonProps) {
+  icon: Icon,
+  active,
+  hovered,
+  accentColor,
+  isLightTheme,
+  onClick,
+  onHover,
+}: SidebarNavItemProps) {
+  const activeTextColor = isLightTheme ? "text-zinc-900" : "text-white";
+  const inactiveTextColor = isLightTheme
+    ? "text-zinc-500 hover:text-zinc-700"
+    : "text-white/40 hover:text-white/70";
+
   return (
-    <TooltipProvider delayDuration={0}>
+    <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.button
@@ -409,58 +358,62 @@ function SidebarButton({
             onMouseEnter={() => onHover(true)}
             onMouseLeave={() => onHover(false)}
             className={cn(
-              'relative flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 focus:outline-none',
-              active ? 'text-white' : 'text-white/60 hover:text-white/90'
+              "relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
+              active ? activeTextColor : inactiveTextColor,
             )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.9 }}
           >
-            {/* Active background */}
+            {/* Active state background */}
             <AnimatePresence>
               {active && (
                 <motion.div
-                  className={cn('absolute inset-0 rounded-lg bg-white/15 border border-white/20')}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className="absolute inset-0 rounded-lg"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  style={{
+                    background: isLightTheme
+                      ? `rgba(${accentColor}, 0.12)`
+                      : `rgba(${accentColor}, 0.18)`,
+                  }}
                 />
               )}
             </AnimatePresence>
 
-            {/* Hover effect */}
+            {/* Hover background */}
             {!active && (
               <motion.div
-                className="absolute inset-0 rounded-lg bg-white/5"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ duration: 0.15 }}
+                className="absolute inset-0 rounded-lg"
+                animate={{
+                  opacity: hovered ? 1 : 0,
+                  background: isLightTheme ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
+                }}
+                transition={{ duration: 0.1 }}
               />
             )}
 
-            <Icon className="w-4 h-4 relative z-10" />
+            <Icon className="w-3.5 h-3.5 relative z-10" strokeWidth={active ? 2 : 1.5} />
 
-            {/* Active indicator dot */}
+            {/* Active dot */}
             <AnimatePresence>
               {active && (
                 <motion.span
-                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-black"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  transition={{ type: 'spring', stiffness: 500 }}
+                  className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                  style={{ background: `rgba(${accentColor}, 1)` }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 500 }}
                 />
               )}
             </AnimatePresence>
           </motion.button>
         </TooltipTrigger>
-        <TooltipContent
-          side="bottom"
-          className="bg-popover text-popover-foreground border-border text-xs rounded-lg shadow-xl"
-        >
+        <TooltipContent side="bottom" className="text-xs rounded-lg">
           {label}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
+import { useRoom } from '@/lib/room-context'
 import {
   Tv,
   PenTool,
@@ -237,7 +238,7 @@ export function RoomHomeOverlay({
 
   return (
     <motion.div
-      className="absolute inset-0 z-10 flex flex-col items-center p-8 md:p-12 overflow-y-auto bg-black/60 backdrop-blur-3xl"
+      className="absolute inset-0 z-10 flex flex-col items-center px-8 md:px-12 pb-8 md:pb-12 pt-32 md:pt-40 overflow-y-auto bg-black/60 backdrop-blur-3xl"
       variants={container}
       initial="hidden"
       animate="show"

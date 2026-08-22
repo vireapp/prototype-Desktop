@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { updateRoom, deleteRoom, RoomRole } from '@/components/rooms/actions'
+import { updateRoom, deleteRoom, RoomRole, getRoomBans, unbanRoomUser } from '@/components/rooms/actions'
 import { toast } from 'sonner'
 import {
   Settings,
@@ -44,9 +44,12 @@ import {
   MessageSquare as ChatIcon,
   Skull,
   Zap,
-  Globe
+  Globe,
+  Bot,
+  Ban
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 const useRouter = () => {
   const navigate = useNavigate()
   return {
@@ -80,6 +83,16 @@ interface RoomSettingsDialogProps {
       lockRoom?: boolean
       waitingRoom?: boolean
       syncActivities?: boolean
+      aiSettings?: {
+        aiCanChangeMusic: boolean
+        aiCanChangeTheme: boolean
+        aiCanSwitchActivity: boolean
+        aiCanTriggerReactions: boolean
+        aiCanKickUsers: boolean
+        aiCanLockRoom: boolean
+        aiCanClearChat: boolean
+        aiCanUpdateRoomInfo: boolean
+      }
     }
     appearance?: {
       theme: string
@@ -140,10 +153,42 @@ export function RoomSettingsDialog({
   const [waitingRoom, setWaitingRoom] = useState(room.permissions?.waitingRoom || false)
   const [syncActivities, setSyncActivities] = useState(room.permissions?.syncActivities || false)
 
+  // Granular AI Permissions State
+  const [aiCanChangeMusic, setAiCanChangeMusic] = useState(room.permissions?.aiSettings?.aiCanChangeMusic ?? true)
+  const [aiCanChangeTheme, setAiCanChangeTheme] = useState(room.permissions?.aiSettings?.aiCanChangeTheme ?? true)
+  const [aiCanSwitchActivity, setAiCanSwitchActivity] = useState(room.permissions?.aiSettings?.aiCanSwitchActivity ?? true)
+  const [aiCanTriggerReactions, setAiCanTriggerReactions] = useState(room.permissions?.aiSettings?.aiCanTriggerReactions ?? true)
+  
+  const [aiCanKickUsers, setAiCanKickUsers] = useState(room.permissions?.aiSettings?.aiCanKickUsers ?? false)
+  const [aiCanLockRoom, setAiCanLockRoom] = useState(room.permissions?.aiSettings?.aiCanLockRoom ?? false)
+  const [aiCanClearChat, setAiCanClearChat] = useState(room.permissions?.aiSettings?.aiCanClearChat ?? false)
+  const [aiCanUpdateRoomInfo, setAiCanUpdateRoomInfo] = useState(room.permissions?.aiSettings?.aiCanUpdateRoomInfo ?? false)
+
   // Appearance State
   const [hideParticipants, setHideParticipants] = useState(
     room.appearance?.hideParticipants || false
   )
+
+  // Banned Users State
+  const [bannedUsers, setBannedUsers] = useState<any[]>([])
+  
+  useEffect(() => {
+    if (userRole === 'owner' || userRole === 'admin' || userRole === 'moderator') {
+      getRoomBans(room.id).then((bans) => {
+        setBannedUsers(bans)
+      }).catch((e) => console.error("Error fetching bans", e))
+    }
+  }, [room.id, userRole])
+
+  const handleUnban = async (userId: string) => {
+    try {
+      await unbanRoomUser(room.id, userId)
+      setBannedUsers(prev => prev.filter(b => b.user_id !== userId))
+      toast.success('User unbanned')
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to unban user')
+    }
+  }
 
   // Media Settings (stored in appearance for now)
   const [videoQuality, setVideoQuality] = useState(room.appearance?.videoQuality || '720p')
@@ -191,7 +236,17 @@ export function RoomSettingsDialog({
           maxParticipants: Number(maxParticipants),
           lockRoom,
           waitingRoom,
-          syncActivities
+          syncActivities,
+          aiSettings: {
+            aiCanChangeMusic,
+            aiCanChangeTheme,
+            aiCanSwitchActivity,
+            aiCanTriggerReactions,
+            aiCanKickUsers,
+            aiCanLockRoom,
+            aiCanClearChat,
+            aiCanUpdateRoomInfo
+          }
         },
         appearance: {
           theme: 'cyberpunk', // Default theme
@@ -351,6 +406,12 @@ export function RoomSettingsDialog({
                       className="flex-shrink-0 min-w-[100px] sm:min-w-0 w-auto sm:w-full justify-center sm:justify-start px-3 py-2 text-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-400 rounded-md whitespace-nowrap"
                     >
                       <Palette className="w-4 h-4 mr-2" /> Look
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="ai"
+                      className="flex-shrink-0 min-w-[100px] sm:min-w-0 w-auto sm:w-full justify-center sm:justify-start px-3 py-2 text-sm data-[state=active]:bg-white/10 data-[state=active]:text-white text-zinc-400 rounded-md whitespace-nowrap"
+                    >
+                      <Bot className="w-4 h-4 mr-2" /> AI Settings
                     </TabsTrigger>
                   </>
                 )}
@@ -624,6 +685,46 @@ export function RoomSettingsDialog({
                     className="data-[state=checked]:bg-red-500"
                   />
                 </div>
+
+                <div className="bg-white/5 border border-white/5 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-white/5 flex items-center gap-2">
+                    <Ban className="w-5 h-5 text-red-400" />
+                    <div>
+                      <h3 className="text-sm font-medium text-white">Banned Users</h3>
+                      <p className="text-xs text-zinc-400">Users permanently removed from this room.</p>
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    {bannedUsers.length === 0 ? (
+                      <div className="text-center py-4 text-xs text-zinc-500">No banned users</div>
+                    ) : (
+                      bannedUsers.map((ban) => (
+                        <div key={ban.user_id} className="flex items-center justify-between p-2 rounded-lg bg-black/20 border border-white/5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center">
+                              {ban.profile?.avatar_url ? (
+                                <img src={ban.profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs text-white">{ban.profile?.full_name?.charAt(0) || ban.profile?.username?.charAt(0) || '?'}</span>
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm text-white">{ban.profile?.full_name || ban.profile?.username || 'Unknown User'}</span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-zinc-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleUnban(ban.user_id)}
+                          >
+                            Unban
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </TabsContent>
 
               {/* Chat Tab - Simplified */}
@@ -748,6 +849,101 @@ export function RoomSettingsDialog({
                 <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center justify-between">
                   <Label className="text-zinc-200">Hide Participants (Focus Mode)</Label>
                   <Switch checked={hideParticipants} onCheckedChange={setHideParticipants} />
+                </div>
+              </TabsContent>
+
+              {/* AI Settings Tab */}
+              <TabsContent
+                value="ai"
+                className="mt-0 space-y-6 animate-in fade-in zoom-in-95 duration-200"
+              >
+                <div className="flex items-center gap-3 pb-4 border-b border-white/5">
+                  <Bot className="w-6 h-6 text-zinc-400" />
+                  <div>
+                    <h2 className="text-lg font-medium text-white">AI Permissions</h2>
+                    <p className="text-xs text-zinc-500">
+                      Control what the AI companion (VIRE) can do in this room.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Vibe Controls */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-zinc-400">Vibe & Environment</h3>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-white">Change Music</Label>
+                        <p className="text-xs text-zinc-500">Allow AI to play, pause, or change the track.</p>
+                      </div>
+                      <Switch checked={aiCanChangeMusic} onCheckedChange={setAiCanChangeMusic} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-white">Change Theme</Label>
+                        <p className="text-xs text-zinc-500">Allow AI to change the room's visual theme.</p>
+                      </div>
+                      <Switch checked={aiCanChangeTheme} onCheckedChange={setAiCanChangeTheme} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-white">Switch Activity</Label>
+                        <p className="text-xs text-zinc-500">Allow AI to launch games or apps.</p>
+                      </div>
+                      <Switch checked={aiCanSwitchActivity} onCheckedChange={setAiCanSwitchActivity} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-white">Trigger Reactions</Label>
+                        <p className="text-xs text-zinc-500">Allow AI to fire confetti and emojis.</p>
+                      </div>
+                      <Switch checked={aiCanTriggerReactions} onCheckedChange={setAiCanTriggerReactions} />
+                    </div>
+                  </div>
+
+                  {/* Moderation Controls */}
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <h3 className="text-sm font-semibold text-red-400/80">Moderation (Admin Only)</h3>
+                    <p className="text-xs text-zinc-500 mb-2">
+                      Even if enabled, AI will only execute these for Admins/Owners.
+                    </p>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/10 bg-red-500/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-red-200">Kick Users</Label>
+                        <p className="text-xs text-red-400/60">Allow AI to kick unruly users.</p>
+                      </div>
+                      <Switch checked={aiCanKickUsers} onCheckedChange={setAiCanKickUsers} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/10 bg-red-500/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-red-200">Lock Room</Label>
+                        <p className="text-xs text-red-400/60">Allow AI to lock/unlock the room.</p>
+                      </div>
+                      <Switch checked={aiCanLockRoom} onCheckedChange={setAiCanLockRoom} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/10 bg-red-500/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-red-200">Clear Chat</Label>
+                        <p className="text-xs text-red-400/60">Allow AI to clear the room chat.</p>
+                      </div>
+                      <Switch checked={aiCanClearChat} onCheckedChange={setAiCanClearChat} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/10 bg-red-500/5">
+                      <div className="space-y-0.5">
+                        <Label className="text-red-200">Update Info</Label>
+                        <p className="text-xs text-red-400/60">Allow AI to rename the room or update description.</p>
+                      </div>
+                      <Switch checked={aiCanUpdateRoomInfo} onCheckedChange={setAiCanUpdateRoomInfo} />
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 

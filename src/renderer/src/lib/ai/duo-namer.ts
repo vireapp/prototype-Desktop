@@ -45,12 +45,13 @@ Return ONLY the room name, nothing else. No quotes, no explanation.
 
     const response = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: 'llama-3.1-8b-instant',
+      model: 'qwen/qwen3.6-27b',
       max_tokens: 20,
       temperature: 0.9
     })
 
-    const name = response.choices[0]?.message?.content?.trim() || ''
+    let name = response.choices[0]?.message?.content || ''
+    name = name.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim()
     // Clean up any quotes or extra chars
     return name.replace(/["']/g, '').trim() || 'Duo Sanctuary'
   } catch {

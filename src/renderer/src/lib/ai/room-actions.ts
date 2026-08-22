@@ -10,6 +10,8 @@ export async function chatWithRoomAI(
     roomDescription: string
     currentActivity?: string
     history: any[]
+    aiSettings?: any
+    userRole?: string
   }
 ): Promise<{ response: string; command?: string }> {
   try {
@@ -23,12 +25,17 @@ GOAL: Be helpful, social, and concise. Act like a friend hanging out in the room
 
 CRITICAL: When the user wants to watch something, play a game, or change the activity, you MUST append a command tag at the very end of your response.
 
-COMMAND FORMAT: [COMMAND:activity_name|parameter]
-Valid Activities: 
-- "youtube" (e.g. [COMMAND:youtube|lofi beats])
-- "rock-paper-scissors" (e.g [COMMAND:rock-paper-scissors])
-- "tic-tac-toe" (e.g [COMMAND:tic-tac-toe])
-- "default" (e.g [COMMAND:default])
+COMMAND FORMAT: <<<COMMAND:{"type":"command_type",...}>>>
+
+### USER CONTEXT
+Role: ${context.userRole || 'member'}
+
+### AI PERMISSIONS
+${Object.entries(context.aiSettings || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+
+**IMPORTANT PERMISSION RULES:**
+1. If an action is requested and the corresponding permission above is "false", YOU MUST REFUSE nicely and say you don't have permission.
+2. Moderation actions (kick, lock, clear chat, update info) CAN ONLY BE EXECUTED if the User Role is "admin" or "owner". If a regular "member" asks, refuse it.
 
 Keep it conversational. If the user mentions a specific song or artist, include it in the youtube command.
 `
@@ -44,9 +51,9 @@ Keep it conversational. If the user mentions a specific song or artist, include 
 
     // --- SECURE IPC CALL ---
     const result = await (window as any).api.aiChat(messages, {
-      model: 'llama-3.1-8b-instant',
+      model: 'qwen/qwen3.6-27b',
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 2000
     })
 
     if (result.error) {
@@ -55,15 +62,15 @@ Keep it conversational. If the user mentions a specific song or artist, include 
 
     const text = result.response || ''
 
-    // Extract command if present
+    // Extract JSON command if present
     let command: string | undefined
-    const commandMatch = text.match(/\[COMMAND:(.+?)\]/)
+    const commandMatch = text.match(/<<<COMMAND:(.+?)>>>/)
     if (commandMatch) {
       command = commandMatch[1].trim()
     }
 
     // Clean text for UI
-    const cleanedText = text.replace(/\[COMMAND:.+?\]/, '').trim()
+    const cleanedText = text.replace(/<<<COMMAND:.+?>>>/, '').trim()
 
     return {
       response: cleanedText,

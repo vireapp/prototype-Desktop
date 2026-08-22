@@ -333,7 +333,7 @@ export function AppearanceSettings({
           type="submit"
           disabled={isPending}
           className={cn(
-            "liquid-metal rounded-[var(--radius)] h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105",
+            "bg-primary hover:bg-primary/90 rounded-[var(--radius)] h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105",
             isPending && "opacity-70",
           )}
         >
@@ -344,3 +344,4 @@ export function AppearanceSettings({
     </form>
   );
 }
+

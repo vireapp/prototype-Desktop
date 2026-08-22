@@ -24,6 +24,7 @@ interface VideoConferenceProps {
   isCamOn: boolean
   isDeafened?: boolean
   onToggleDeafen?: () => void
+  isMinimized?: boolean
 }
 
 export function VideoConference({
@@ -44,7 +45,8 @@ export function VideoConference({
   isMicOn,
   isCamOn,
   isDeafened,
-  onToggleDeafen
+  onToggleDeafen,
+  isMinimized
 }: VideoConferenceProps) {
   return (
     <div className="w-full h-full flex flex-col">
@@ -64,6 +66,7 @@ export function VideoConference({
         canToggleMic={!permissions?.lockMic || isOwner}
         canToggleCam={!permissions?.lockCam || isOwner}
         canToggleScreen={!permissions?.lockScreen || isOwner}
+        isMinimized={isMinimized}
       />
     </div>
   )

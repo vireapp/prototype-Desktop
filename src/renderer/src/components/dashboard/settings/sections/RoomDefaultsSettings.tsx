@@ -190,7 +190,7 @@ export function RoomDefaultsSettings({
         <Button
           onClick={handleSubmit}
           disabled={isPending}
-          className="liquid-metal rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105"
+          className="bg-primary hover:bg-primary/90 rounded-full h-12 px-12 text-sm font-medium tracking-widest uppercase text-primary-foreground shadow-lg transition-all hover:scale-105"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           <span>Sync Preferences</span>
@@ -199,3 +199,4 @@ export function RoomDefaultsSettings({
     </div>
   );
 }
+

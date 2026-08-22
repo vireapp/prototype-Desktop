@@ -212,6 +212,7 @@ body {
 
 html {
   background-color: var(--background);
+  font-size: calc(var(--density-base-size, 16px) * var(--text-scale, 1));
 }
 
 /* Fix for Radix UI Dialog layout shift */
@@ -1100,8 +1101,8 @@ html.dark.high-contrast {
 
 /* Layout Density */
 html.density-compact {
-  font-size: 14px;
+  --density-base-size: 14px;
 }
 html.density-relaxed {
-  font-size: 18px;
+  --density-base-size: 18px;
 }

@@ -26,11 +26,19 @@ const IconMap: any = {
 function AchievementBadge({ achievement }: { achievement: any }): React.JSX.Element {
   const Icon = IconMap[achievement.icon] || Sparkles
 
+  const tierColors: Record<string, string> = {
+    bronze: 'border-orange-800/50 text-orange-700 bg-orange-700/10',
+    silver: 'border-slate-400/50 text-slate-400 bg-slate-400/10',
+    gold: 'border-amber-400/50 text-amber-400 bg-amber-400/10',
+    platinum: 'border-cyan-400/50 text-cyan-400 bg-cyan-400/10',
+  }
+  const colorClass = tierColors[achievement.tier || 'bronze'] || 'border-border text-muted-foreground bg-muted/30'
+
   return (
     <div className="group/badge relative flex flex-col items-center gap-1 min-w-[40px]">
-      <div className="h-7 w-7 rounded-full bg-muted/30 border border-border flex items-center justify-center group-hover/badge:scale-110 transition-transform duration-200 group-hover/badge:border-primary/20 group-hover/badge:bg-primary/5">
+      <div className={`h-7 w-7 rounded-full ${colorClass} border flex items-center justify-center group-hover/badge:scale-110 transition-transform duration-200 group-hover/badge:border-primary/50 group-hover/badge:bg-primary/10`}>
         <Icon
-          className="w-3.5 h-3.5 text-muted-foreground group-hover/badge:text-primary transition-colors duration-200"
+          className="w-3.5 h-3.5 transition-colors duration-200"
           strokeWidth={1.5}
         />
       </div>
@@ -221,7 +229,7 @@ export function ProfileCommandWidget({ user }: { user: any }) {
               </span>
               {/* Clock */}
               <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
-                {format(currentTime, 'HH:mm')}
+                {user.settings?.clock_format === '12h' ? format(currentTime, 'hh:mm a') : format(currentTime, 'HH:mm')}
               </span>
             </div>
           </div>
@@ -291,8 +299,32 @@ export function ProfileCommandWidget({ user }: { user: any }) {
                 value={gameData?.activeRooms ?? '—'}
                 label="Rooms"
               />
-              <StatCell icon={<Flame className="w-3.5 h-3.5 text-rose-500" />} value="—" label="Streak" />
+              <StatCell icon={<Flame className="w-3.5 h-3.5 text-rose-500" />} value={gameData?.streakCount ?? 0} label="Streak" />
             </div>
+
+            <div className="h-px bg-border" />
+
+            {/* Quests row */}
+            {gameData?.quests && gameData.quests.length > 0 && (
+              <div className="px-5 py-3">
+                <span className="text-[10px] font-medium text-muted-foreground/55 tracking-wide uppercase mb-2 block">
+                  Daily Quests
+                </span>
+                <div className="space-y-1.5">
+                  {gameData.quests.map((q: any) => (
+                    <div key={q.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-border/50">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-foreground">{q.quest?.name}</span>
+                        <span className="text-[9px] text-muted-foreground">{q.quest?.description}</span>
+                      </div>
+                      <div className="text-[10px] font-bold">
+                        {q.completed ? '✅' : '0 / 1'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="h-px bg-border" />
 

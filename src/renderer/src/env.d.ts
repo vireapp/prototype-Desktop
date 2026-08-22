@@ -3,7 +3,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface CustomAPI {
-  onNavigate: (callback: (route: string) => void) => void
+  onNavigate: (callback: (route: string) => void) => () => void
   minimize: () => void
   maximize: () => void
   close: () => void

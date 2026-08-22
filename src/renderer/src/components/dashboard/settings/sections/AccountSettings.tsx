@@ -70,7 +70,7 @@ export function AccountSettings({ email }: { email?: string }) {
               <Button
                 type="submit"
                 disabled={isEmailPending}
-                className="liquid-metal rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
+                className="bg-primary hover:bg-primary/90 rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
               >
                 {isEmailPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Email
@@ -127,7 +127,7 @@ export function AccountSettings({ email }: { email?: string }) {
               <Button
                 type="submit"
                 disabled={isPasswordPending}
-                className="liquid-metal rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
+                className="bg-primary hover:bg-primary/90 rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
               >
                 {isPasswordPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Password
@@ -168,3 +168,4 @@ export function AccountSettings({ email }: { email?: string }) {
     </div>
   );
 }
+

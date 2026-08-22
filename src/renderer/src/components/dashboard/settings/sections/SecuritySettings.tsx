@@ -150,7 +150,7 @@ export function SecuritySettings({
                 variant="outline"
                 onClick={handleSetup2FA}
                 disabled={isPending}
-                className="liquid-metal rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
+                className="bg-primary hover:bg-primary/90 rounded-full h-11 px-10 text-xs font-medium tracking-widest uppercase transition-all hover:scale-105"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Setup 2FA"}
               </Button>
@@ -189,7 +189,7 @@ export function SecuritySettings({
                   <Button
                     onClick={handleVerify2FA}
                     disabled={isPending || verifyCode.length < 6}
-                    className="liquid-metal rounded-lg h-10 px-4 text-xs font-medium uppercase transition-all"
+                    className="bg-primary hover:bg-primary/90 rounded-lg h-10 px-4 text-xs font-medium uppercase transition-all"
                   >
                     {isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -330,3 +330,4 @@ export function SecuritySettings({
     </div>
   );
 }
+

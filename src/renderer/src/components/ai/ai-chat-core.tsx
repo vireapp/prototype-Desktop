@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Message } from '@/lib/ai/use-ai-chat'
+import { useNavigate } from 'react-router-dom'
+import { processAiCommands } from '@/lib/ai/command-handler'
 
 interface AIChatCoreProps {
   messages: Message[]
@@ -17,10 +19,12 @@ interface AIChatCoreProps {
   setShowClearConfirm: (val: boolean) => void
   scrollEndRef: React.RefObject<HTMLDivElement | null>
   inputRef?: React.RefObject<HTMLInputElement | null>
-  handleSend: () => Promise<void>
+  handleSend: (overrideInput?: string) => Promise<void>
   handleClearHistory: () => Promise<boolean>
   /** If true, shows "expand to full page" button */
   onExpand?: () => void
+  /** If true, shows "collapse to panel" button */
+  onCollapse?: () => void
   status: 'online' | 'thinking' | 'error'
   /** compact = panel, full = fullpage */
   variant?: 'panel' | 'fullpage'
@@ -40,61 +44,49 @@ export function AIChatCore({
   handleSend,
   handleClearHistory,
   onExpand,
+  onCollapse,
   status,
   variant = 'panel',
   hideHeader = false
 }: AIChatCoreProps) {
+  const navigate = useNavigate()
+
+  // Helper to extract options and clean message
+  const processMessage = (text: string) => {
+    // 1. Strip raw commands
+    let cleanText = text.replace(/<<<COMMAND:[\s\S]*?>>>/g, '')
+
+    // 2. Extract options
+    const options: any[] = []
+    const optionRegex = /<<<OPTION:(.*?)>>>/gs
+    const matches = [...cleanText.matchAll(optionRegex)]
+    
+    for (const match of matches) {
+      try {
+        options.push(JSON.parse(match[1]))
+      } catch (e) {
+        console.error('Failed to parse option', e)
+      }
+    }
+
+    // 3. Strip options from text
+    cleanText = cleanText.replace(/<<<OPTION:[\s\S]*?>>>/g, '')
+
+    return { cleanText, options }
+  }
+
   return (
     <div className="flex-1 min-h-0 w-full flex flex-col">
       {/* Header */}
       {!hideHeader && (
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02] shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Animated AI orb */}
-          <div className="relative">
-            <div
-              className={cn(
-                'w-9 h-9 rounded-xl flex items-center justify-center border',
-                status === 'error'
-                  ? 'bg-red-500/15 border-red-500/20'
-                  : 'bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border-violet-500/20'
-              )}
-            >
-              <Sparkles
-                className={cn(
-                  'w-4 h-4',
-                  status === 'error' ? 'text-red-400' : 'text-violet-400',
-                  status === 'thinking' && 'animate-pulse'
-                )}
-              />
-            </div>
-            <span
-              className={cn(
-                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background',
-                status === 'error'
-                  ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.7)]'
-                  : status === 'thinking'
-                    ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.7)] animate-pulse'
-                    : 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]'
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="text-sm font-semibold text-white tracking-wide">VIRE AI</p>
-            <p
-              className={cn(
-                'text-[10px] font-medium uppercase tracking-widest',
-                status === 'error'
-                  ? 'text-red-400'
-                  : status === 'thinking'
-                    ? 'text-amber-400'
-                    : 'text-emerald-400/80'
-              )}
-            >
-              {status === 'error' ? 'Offline' : status === 'thinking' ? 'Thinking...' : 'Online'}
-            </p>
-          </div>
+      <div className={cn("flex items-center justify-between px-4 py-3 border-b shrink-0", variant === 'fullpage' ? 'border-white/[0.05] bg-white/[0.01]' : 'border-border bg-background')}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-foreground tracking-tight">VIRE AI</span>
+          <span className={cn('text-[10px] font-medium uppercase tracking-widest ml-2',
+            status === 'error' ? 'text-destructive' : status === 'thinking' ? 'text-amber-400' : 'text-emerald-500'
+          )}>
+            {status === 'error' ? 'Offline' : status === 'thinking' ? 'Thinking...' : 'Online'}
+          </span>
         </div>
 
         <div className="flex items-center gap-1">
@@ -134,6 +126,18 @@ export function AIChatCore({
               <Maximize2 className="w-3.5 h-3.5" />
             </Button>
           )}
+
+          {/* Collapse to Panel Button (fullpage only) */}
+          {onCollapse && variant === 'fullpage' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-white/40 hover:text-white hover:bg-white/10 text-xs h-8 px-3 rounded-lg ml-2"
+              onClick={onCollapse}
+            >
+              Switch to Panel
+            </Button>
+          )}
         </div>
       </div>
       )}
@@ -143,8 +147,8 @@ export function AIChatCore({
         <div className={cn('flex flex-col gap-5 p-4 w-full box-border', variant === 'fullpage' && 'max-w-3xl mx-auto')}>
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center mt-24 gap-4 opacity-40 select-none">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-violet-400" />
+              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-7 h-7 text-zinc-400" />
               </div>
               <div className="text-center space-y-1">
                 <p className="text-sm text-white/60 font-medium">VIRE Intelligence</p>
@@ -165,34 +169,59 @@ export function AIChatCore({
                 style={{ width: '100%', minWidth: 0, display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}
               >
                 {msg.role === 'model' && (
-                  <div className="w-6 h-6 shrink-0 mr-2 mt-1 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-violet-400" />
+                  <div className="w-6 h-6 shrink-0 mr-2 mt-1 rounded-lg bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-zinc-400" />
                   </div>
                 )}
-                <div
-                  style={{ maxWidth: '80%', minWidth: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                  className={cn(
-                    'rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-lg',
-                    msg.role === 'user'
-                      ? 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-br-sm border border-violet-500/30 shadow-violet-900/30'
-                      : 'bg-white/[0.04] text-zinc-100 rounded-bl-sm border border-white/[0.06] shadow-black/20'
-                  )}
-                >
+                <div className="flex flex-col gap-2" style={{ maxWidth: '85%', minWidth: 0 }}>
                   <div
-                    className={cn(
-                      'prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/40 prose-pre:p-2 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-p:my-1',
-                      msg.role === 'user' && 'prose-p:text-white'
-                    )}
                     style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                    className={cn(
+                      'rounded-2xl px-4 py-3 text-[14px] leading-relaxed shadow-sm',
+                      msg.role === 'user'
+                        ? 'bg-indigo-600 text-white rounded-br-sm'
+                        : 'bg-zinc-800/80 text-zinc-100 rounded-bl-sm border border-white/5'
+                    )}
                   >
-                    <ReactMarkdown
-                      components={{
-                        p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>
-                      }}
+                    <div
+                      className={cn(
+                        'prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/40 prose-pre:p-2 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-p:my-1',
+                        msg.role === 'user' && 'prose-p:text-white'
+                      )}
+                      style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                     >
-                      {msg.content[0].text}
-                    </ReactMarkdown>
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>
+                        }}
+                      >
+                        {processMessage(msg.content[0].text).cleanText}
+                      </ReactMarkdown>
+                    </div>
                   </div>
+
+                  {/* Render Options if any */}
+                  {msg.role === 'model' && processMessage(msg.content[0].text).options.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {processMessage(msg.content[0].text).options.map((opt, i) => (
+                        <Button
+                          key={i}
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 text-[12px] bg-zinc-800 hover:bg-indigo-600 hover:text-white border border-white/10 transition-colors rounded-lg"
+                          onClick={() => {
+                            if (opt.command) {
+                              processAiCommands(`<<<COMMAND:${JSON.stringify(opt.command)}>>>`, navigate)
+                            } else if (opt.label) {
+                              handleSend(opt.label)
+                            }
+                          }}
+                        >
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -205,13 +234,13 @@ export function AIChatCore({
               animate={{ opacity: 1 }}
               className="flex justify-start items-end gap-2"
             >
-              <div className="w-6 h-6 shrink-0 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-violet-400 animate-pulse" />
+              <div className="w-6 h-6 shrink-0 rounded-lg bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-zinc-400 animate-pulse" />
               </div>
               <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1.5 items-center">
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-[bounce_0.9s_infinite_-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-[bounce_0.9s_infinite_-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-[bounce_0.9s_infinite]" />
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-[bounce_0.9s_infinite_-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-[bounce_0.9s_infinite_-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-[bounce_0.9s_infinite]" />
               </div>
             </motion.div>
           )}
@@ -223,15 +252,15 @@ export function AIChatCore({
       {/* Input Area */}
       <div className={cn('p-4 shrink-0 border-t border-white/5', variant === 'fullpage' && 'pb-6')}>
         <div className={cn('relative group', variant === 'fullpage' && 'max-w-3xl mx-auto')}>
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-500 blur-sm" />
-          <div className="relative flex gap-2 bg-white/[0.04] rounded-2xl p-1.5 border border-white/[0.08] group-focus-within:border-violet-500/30 transition-colors items-center">
-            <Input
-              ref={inputRef}
+          <div className="relative flex gap-2 bg-white/[0.06] shadow-inner rounded-2xl p-1.5 border border-white/10 transition-colors items-center focus-within:border-indigo-500/50">
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type="text"
               placeholder="Ask VIRE anything..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm h-10 px-3 placeholder:text-white/20 text-white"
+              className="flex-1 bg-transparent border-0 focus:ring-0 focus:outline-none focus:border-transparent text-sm h-10 px-3 placeholder:text-white/20 text-white min-w-0"
               disabled={isLoading}
             />
             <Button
@@ -239,19 +268,16 @@ export function AIChatCore({
               className={cn(
                 'rounded-xl w-9 h-9 shrink-0 transition-all duration-300',
                 input.trim()
-                  ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_20px_rgba(139,92,246,0.6)] hover:scale-105'
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm'
                   : 'bg-white/5 text-white/20 cursor-not-allowed'
               )}
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={isLoading || !input.trim()}
             >
               <Send className="w-4 h-4" />
             </Button>
           </div>
         </div>
-        <p className="text-center text-[9px] text-white/15 font-mono tracking-[0.2em] uppercase mt-2.5">
-          V I R E &nbsp; I N T E L L I G E N C E
-        </p>
       </div>
     </div>
   )

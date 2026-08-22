@@ -1,185 +1,148 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Maximize2, Users, Mic, MicOff } from 'lucide-react'
-import { PeerStream, PeerMetadata } from '../../hooks/use-webrtc'
-import { useAudioLevel } from '../../hooks/use-audio-level'
-import { cn } from '@/lib/utils'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MicOff, Users, ChevronUp } from "lucide-react";
+import { PeerStream, PeerMetadata } from "../../hooks/use-webrtc";
+import { useAudioLevel } from "../../hooks/use-audio-level";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ParticipantsStripProps {
-  localStream: MediaStream | null
-  remoteStreams: PeerStream[]
-  peersMetadata: Record<string, PeerMetadata>
+  localStream: MediaStream | null;
+  remoteStreams: PeerStream[];
+  peersMetadata: Record<string, PeerMetadata>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  user: any
-  onExpand: () => void
-  isMicOn: boolean
+  user: any;
+  onExpand: () => void;
+  isMicOn: boolean;
+  isCamOn: boolean;
 }
 
-// Sub-component to handle audio level hook correctly for each peer
 function ParticipantAvatar({
   stream,
   name,
   avatarUrl,
   isLocal = false,
   isMicOn = true,
+  isCamOn = false,
   onClick,
-  index = 0
+  index = 0,
 }: {
-  stream: MediaStream | null
-  name: string
-  avatarUrl?: string
-  isLocal?: boolean
-  isMicOn?: boolean
-  onClick: () => void
-  index?: number
+  stream: MediaStream | null;
+  name: string;
+  avatarUrl?: string;
+  isLocal?: boolean;
+  isMicOn?: boolean;
+  isCamOn?: boolean;
+  onClick: () => void;
+  index?: number;
 }) {
-  const { isSpeaking } = useAudioLevel(stream)
+  const { isSpeaking } = useAudioLevel(stream);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  React.useEffect(() => {
+    if (videoRef.current && stream && isCamOn) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, isCamOn]);
 
   const getInitials = (n?: string) => {
-    if (!n) return 'U'
+    if (!n) return "U";
     return n
-      .split(' ')
+      .split(" ")
       .map((part) => part[0])
       .slice(0, 2)
-      .join('')
-      .toUpperCase()
-  }
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <motion.div
-          className="relative group cursor-pointer"
+          className="relative cursor-pointer flex-shrink-0"
           onClick={onClick}
-          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          initial={{ opacity: 0, scale: 0.7, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.5, y: 20 }}
+          exit={{ opacity: 0, scale: 0.7, y: 8 }}
           transition={{
-            type: 'spring',
-            stiffness: 500,
-            damping: 30,
-            delay: index * 0.05
+            type: "spring",
+            stiffness: 460,
+            damping: 28,
+            delay: index * 0.04,
           }}
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
         >
-          {/* Speaking Ring Animation */}
+          {/* Speaking ring */}
           <AnimatePresence>
             {isSpeaking && (
-              <>
-                {/* Outer pulse ring */}
-                <motion.div
-                  className="absolute -inset-2 rounded-full"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{
-                    opacity: [0.5, 0],
-                    scale: [1, 1.4]
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: 'easeOut'
-                  }}
-                  style={{
-                    background:
-                      'radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, transparent 70%)'
-                  }}
-                />
-                {/* Inner glow */}
-                <motion.div
-                  className="absolute -inset-1 rounded-full bg-white/20 blur-md"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                />
-              </>
+              <motion.div
+                className="absolute -inset-[3px] rounded-full ring-2 ring-green-400/70"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              />
             )}
           </AnimatePresence>
 
-          {/* Breathing animation for avatar */}
-          <motion.div
-            animate={{
-              scale: isLocal ? [1, 1.02, 1] : 1
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-          >
-            <Avatar
-              className={cn(
-                'w-11 h-11 border-2 transition-all relative z-10',
-                isLocal
-                  ? 'border-indigo-500/50 ring-2 ring-indigo-500/20'
-                  : 'border-border group-hover:border-primary/30',
-                isSpeaking && !isLocal && 'border-green-500/50 ring-2 ring-green-500/30'
-              )}
-            >
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback
-                className={cn(
-                  'font-medium text-xs',
-                  isLocal
-                    ? 'bg-white/10 border border-white/20 text-white'
-                    : 'bg-white/5 text-white/50 border border-white/10'
-                )}
-              >
-                {getInitials(name)}
-              </AvatarFallback>
-            </Avatar>
-          </motion.div>
-
-          {/* Mic Status Indicator */}
-          <motion.div
+          {/* Avatar / Video */}
+          <div
             className={cn(
-              'absolute -bottom-0.5 -right-0.5 p-1 rounded-full border-2 border-black z-20',
-              !isMicOn ? 'bg-red-500' : isSpeaking ? 'bg-green-500' : 'bg-zinc-700'
+              "w-9 h-9 border-2 transition-all duration-200 rounded-full overflow-hidden relative",
+              isSpeaking
+                ? "border-green-400/60"
+                : isLocal
+                  ? "border-indigo-400/40"
+                  : "border-white/[0.12]",
             )}
-            animate={{
-              scale: isSpeaking ? [1, 1.2, 1] : 1
-            }}
-            transition={{
-              duration: 0.3,
-              repeat: isSpeaking ? Infinity : 0
-            }}
           >
-            {!isMicOn ? (
-              <MicOff className="w-2.5 h-2.5 text-white" />
+            {isCamOn && stream ? (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <Mic className="w-2.5 h-2.5 text-white" />
+              <Avatar className="w-full h-full border-none">
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback
+                  className={cn(
+                    "text-[11px] font-semibold",
+                    isLocal ? "bg-indigo-500/20 text-indigo-300" : "bg-white/[0.06] text-white/60",
+                  )}
+                >
+                  {getInitials(name)}
+                </AvatarFallback>
+              </Avatar>
             )}
-          </motion.div>
+          </div>
 
-          {/* Local indicator */}
+          {/* Mic off badge */}
+          {!isMicOn && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0d0d10] border border-white/[0.1] flex items-center justify-center">
+              <MicOff className="w-2 h-2 text-red-400" />
+            </div>
+          )}
+
+          {/* Local user badge */}
           {isLocal && (
-            <motion.div
-              className="absolute -top-0.5 -left-0.5 px-1 py-0.5 bg-white rounded text-[8px] font-bold text-black z-20 shadow-lg"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, delay: 0.2 }}
-            >
-              YOU
-            </motion.div>
+            <div className="absolute -top-0.5 -left-0.5 w-3.5 h-3.5 rounded-full bg-indigo-500 border border-[#0d0d10] flex items-center justify-center">
+              <span className="text-[6px] font-bold text-white">Y</span>
+            </div>
           )}
         </motion.div>
       </TooltipTrigger>
-      <TooltipContent
-        side="left"
-        className="bg-popover text-popover-foreground border-border flex items-center gap-2 rounded-lg shadow-xl"
-      >
-        <span className="font-medium">{isLocal ? 'You' : name}</span>
-        {isSpeaking && <span className="text-xs text-green-400">(Speaking)</span>}
-        {!isMicOn && <span className="text-xs text-red-400">(Muted)</span>}
+      <TooltipContent side="left" className="text-xs rounded-lg">
+        {isLocal ? `${name} (you)` : name}
       </TooltipContent>
     </Tooltip>
-  )
+  );
 }
 
 export function ParticipantsStrip({
@@ -188,100 +151,113 @@ export function ParticipantsStrip({
   peersMetadata,
   user,
   onExpand,
-  isMicOn
+  isMicOn,
+  isCamOn,
 }: ParticipantsStripProps) {
-  const totalParticipants = 1 + Object.keys(peersMetadata).length
+  const MAX_VISIBLE = 4;
+  const allParticipants = [
+    {
+      id: user?.id || "local",
+      stream: localStream,
+      name: user?.user_metadata?.name || user?.email?.split("@")[0] || "You",
+      avatarUrl: user?.user_metadata?.avatar_url,
+      isLocal: true,
+      isMicOn,
+      isCamOn,
+    },
+    ...Object.entries(peersMetadata).map(([userId, metadata]) => {
+      const rs = remoteStreams.find((s) => s.userId === userId);
+      return {
+        id: userId,
+        stream: rs?.stream || null,
+        name: (metadata as any)?.username || (metadata as any)?.name || "Guest",
+        avatarUrl: metadata?.avatarUrl,
+        isLocal: false,
+        isMicOn: rs ? rs.audioEnabled : false,
+        isCamOn: rs ? rs.videoEnabled : false,
+      };
+    }),
+  ];
+
+  const visible = allParticipants.slice(0, MAX_VISIBLE);
+  const overflow = allParticipants.length - MAX_VISIBLE;
 
   return (
-    <motion.div
-      className="w-20 flex flex-col items-center py-4 gap-4 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[28px] max-h-[85vh] transition-all overflow-hidden shadow-2xl"
-      initial={{ x: 50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-    >
-      {/* Header */}
+    <TooltipProvider delayDuration={300}>
       <motion.div
-        className="flex flex-col items-center gap-1"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        className="flex flex-col items-center gap-2"
+        initial={{ opacity: 0, x: 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 380,
+          damping: 30,
+          delay: 0.2,
+        }}
       >
-        <div className="p-2.5 rounded-full bg-white/5 shadow-inner text-white/60">
-          <Users className="w-4 h-4" />
-        </div>
-        <span className="text-[10px] font-medium text-white/60">{totalParticipants}</span>
-      </motion.div>
-
-      {/* Divider */}
-      <div className="w-8 h-px bg-white/10" />
-
-      {/* Participants */}
-      <div className="flex-1 w-full flex flex-col items-center gap-3 overflow-y-auto scrollbar-hide px-3 min-h-0 py-1">
-        <TooltipProvider delayDuration={0}>
-          <AnimatePresence mode="popLayout">
-            {/* Local User */}
-            <ParticipantAvatar
-              key="local"
-              stream={localStream}
-              name={user.user_metadata?.full_name || 'Me'}
-              avatarUrl={user.user_metadata?.avatar_url}
-              isLocal={true}
-              isMicOn={isMicOn}
+        {/* Expand button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.button
               onClick={onExpand}
-              index={0}
+              className="w-9 h-9 rounded-full bg-[#0d0d10]/80 border border-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              suppressHydrationWarning
+            >
+              <Users className="w-3.5 h-3.5" />
+            </motion.button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs rounded-lg">
+            {allParticipants.length} people — click to expand
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Thin divider */}
+        <div className="w-px h-4 bg-white/[0.08]" />
+
+        {/* Avatar list */}
+        <AnimatePresence>
+          {visible.map((p, i) => (
+            <ParticipantAvatar
+              key={p.isLocal ? "local" : p.id}
+              stream={p.stream}
+              name={p.name}
+              avatarUrl={p.avatarUrl}
+              isLocal={p.isLocal}
+              isMicOn={p.isMicOn}
+              isCamOn={p.isCamOn}
+              onClick={onExpand}
+              index={i}
             />
+          ))}
+        </AnimatePresence>
 
-            {/* Separator if there are remote users */}
-            {Object.keys(peersMetadata).length > 0 && (
-              <motion.div
-                key="separator"
-                className="w-8 h-px bg-border shrink-0"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.3 }}
-              />
-            )}
+        {/* Overflow indicator */}
+        {overflow > 0 && (
+          <motion.button
+            onClick={onExpand}
+            className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white/70 text-[10px] font-medium transition-all"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 500 }}
+            whileHover={{ scale: 1.05 }}
+            suppressHydrationWarning
+          >
+            +{overflow}
+          </motion.button>
+        )}
 
-            {/* Remote Users */}
-            {Object.entries(peersMetadata).map(([userId, meta], i) => {
-              const peerStream = remoteStreams.find((p) => p.userId === userId)
-              const isPeerMicOn = peerStream?.stream?.getAudioTracks()[0]?.enabled ?? false
-
-              // If no stream is found, they are "Connecting..." or failed.
-              // We still show them.
-
-              return (
-                <ParticipantAvatar
-                  key={userId}
-                  stream={peerStream?.stream || null}
-                  name={meta.name || 'Guest'}
-                  avatarUrl={meta.avatarUrl}
-                  isMicOn={isPeerMicOn}
-                  onClick={onExpand}
-                  index={i + 1}
-                />
-              )
-            })}
-          </AnimatePresence>
-        </TooltipProvider>
-      </div>
-
-      {/* Expand Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
+        {/* Expand chevron hint */}
+        <motion.button
           onClick={onExpand}
-          className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all backdrop-blur-md"
-          title="Expand View"
+          className="w-6 h-6 rounded-full flex items-center justify-center text-white/20 hover:text-white/50 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          suppressHydrationWarning
         >
-          <Maximize2 className="w-4 h-4" />
-        </Button>
+          <ChevronUp className="w-3 h-3" />
+        </motion.button>
       </motion.div>
-    </motion.div>
-  )
+    </TooltipProvider>
+  );
 }
