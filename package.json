@@ -1,7 +1,7 @@
 {
   "name": "vire-app",
   "productName": "VIRE",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Vire Desktop App",
   "main": "./out/main/index.js",
   "author": "Vire",
